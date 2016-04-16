@@ -160,7 +160,7 @@
    * ```vim $CATALINA_HOME/conf/tomcat-users.xml```
    ```xml
    <tomcat-users>
-   ...
+      ...
       <role rolename="manager-gui"/>
       <role rolename="admin-gui"/>
       <user username="admin" password="**password_administrator**" roles="admin-gui,manager-gui"/>
