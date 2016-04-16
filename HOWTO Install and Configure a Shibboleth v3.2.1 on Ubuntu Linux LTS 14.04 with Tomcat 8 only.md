@@ -1,5 +1,12 @@
 # HOWTO Install and Configure a Shibboleth IdP v3.2.1 on Ubuntu Linux LTS 14.04 with Tomcat 8 only
 
+## Table of Contents
+
+* [Requiremets Hardware](#requirements-hardware)
+* [Requiremets Software](#requirements-software)
+* [Other Requiremets](#other-requirements)
+* [Installation Instruction](#installation-instructions)
+  * [Install software requirements](#install-software-requirements)
 
 ## Requirements Hardware
 
@@ -43,7 +50,7 @@
    * ```vim /etc/environment```
 
 5. Modify the machine environment: ``` vim /etc/environment ```
-   ```shell
+   ```bash
    JAVA_HOME=##PATH_COPIED##
    CATALINA_HOME=/opt/tomcat
    ```
@@ -52,7 +59,7 @@
    * ```source /etc/environment```
 
 7. Verify the changes applied:
-   ```shell
+   ```bash
    echo "JAVA_HOME="$JAVA_HOME ; echo "CATALINA_HOME="$CATALINA_HOME
    ```
 
@@ -151,13 +158,13 @@
 18. Manage Tomcat with its GUI:
    * ```sudo su -```
    * ```vim $CATALINA_HOME/conf/tomcat-users.xml```
-```xml
-<tomcat-users>
-...
-<role rolename="manager-gui"/>
-<role rolename="admin-gui"/>
-<user username="admin" password="**password_administrator**" roles="admin-gui,manager-gui"/>
-<user username="manager" password="**password_manager**" roles="manager-gui"/>
-</tomcat-users>
-```
-  * Try to login on: https://idp.example.garr.it/manager/html with the user "**manager**" and remove all application deployed not directly involved with the IdP.
+   ```xml
+   <tomcat-users>
+   ...
+      <role rolename="manager-gui"/>
+      <role rolename="admin-gui"/>
+      <user username="admin" password="**password_administrator**" roles="admin-gui,manager-gui"/>
+      <user username="manager" password="**password_manager**" roles="manager-gui"/>
+    </tomcat-users>
+    ```
+  * Try to login on: https://idp.example.garr.it/manager/html with the user "**manager**" and remove all application deployed not directly involved with the IdP to improve the speed of Tomcat loading.
