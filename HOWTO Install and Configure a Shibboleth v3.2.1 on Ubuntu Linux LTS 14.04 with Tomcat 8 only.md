@@ -7,7 +7,7 @@
 * [Other Requiremets](#other-requirements)
 * [Installation Instruction](#installation-instructions)
   * [Install software requirements](#install-software-requirements)
-  * [Install Shibboleth Identity Provider v3.2.1](#install-shibboleth-identity-provider-v3.2.1)
+  * [Install Shibboleth Identity Provider v3.2.1](#install-shibboleth-identity-provider-v321)
 
 ## Requirements Hardware
 
