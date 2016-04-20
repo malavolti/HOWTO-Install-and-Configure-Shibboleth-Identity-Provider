@@ -8,6 +8,9 @@
 4. [Installation Instruction](#installation-instructions)
   1. [Install software requirements](#install-software-requirements)
   2. [Install Shibboleth Identity Provider v3.2.1](#install-shibboleth-identity-provider-v321)
+  3. [Configure Apache Tomcat 8](#configure-apache-tomcat-8)
+  4. [Configure Shibboleth Identity Provider v3.2.1 to release the persistent-id (Stored Mode)](#configure-shibboleth-identity-provider-v321-to-release-the-persistent-id-stored-mode)
+
 
 ## Requirements Hardware
 
