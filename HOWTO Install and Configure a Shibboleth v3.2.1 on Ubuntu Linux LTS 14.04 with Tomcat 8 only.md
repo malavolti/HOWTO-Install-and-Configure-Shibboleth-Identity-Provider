@@ -2,12 +2,12 @@
 
 ## Table of Contents
 
-* [Requiremets Hardware](#requirements-hardware)
-* [Requiremets Software](#requirements-software)
-* [Other Requiremets](#other-requirements)
-* [Installation Instruction](#installation-instructions)
-  * [Install software requirements](#install-software-requirements)
-  * [Install Shibboleth Identity Provider v3.2.1](#install-shibboleth-identity-provider-v321)
+1. [Requirements Hardware](#requirements-hardware)
+2. [Requirements Software](#requirements-software)
+3. [Other Requirements](#other-requirements)
+4. [Installation Instruction](#installation-instructions)
+  1. [Install software requirements](#install-software-requirements)
+  2. [Install Shibboleth Identity Provider v3.2.1](#install-shibboleth-identity-provider-v321)
 
 ## Requirements Hardware
 
@@ -33,8 +33,12 @@
 
 ### Install software requirements
 
-1. Become ROOT of the machine: 
+0. Become ROOT of the machine: 
    * ```sudo su -```
+
+1. Install GIT and retrieve this repository: 
+   * ```apt-get install git```
+   * ```git clone https://github.com/malavolti/HOWTO-Install-and-Configure-Shibboleth-Identity-Provider.git /usr/local/src/HOWTO-Shib-IdP```
 
 2. Install the packages required: 
    * ```apt-get install vim ntp```
@@ -157,6 +161,7 @@
    * ```service tomcat restart```
 
 18. Manage Tomcat with its GUI:
+
    * ```sudo su -```
    * ```vim $CATALINA_HOME/conf/tomcat-users.xml```
    ```xml
@@ -168,36 +173,39 @@
       <user username="manager" password="**password_manager**" roles="manager-gui"/>
     </tomcat-users>
     ```
-  * Try to login on: https://idp.example.garr.it/manager/html with the user "**manager**" and remove all application deployed not directly involved with the IdP to improve the speed of Tomcat loading.
+  * Try to login on: https://idp.example.it/manager/html with the user "**manager**" and remove all default applications deployed and not directly involved with the IdP to improve the speed of Tomcat loading.
 
 ### Install Shibboleth Identity Provider v3.2.1
 
-1. Become ROOT
-  * sudo su -
+1. Become ROOT:
+  * ```sudo su -```
+
 2. Download the Shibboleth Identity Provider v3.2.1 package into ```/usr/local/src``` directory:
   * ```cd /usr/local/src```
   * ```wget https://shibboleth.net/downloads/identityprovider/latest/shibboleth-identity-provider-3.2.1.tar.gz```
   * ```tar -xzvf shibboleth-identity-provider-3.2.1.tar.gz```
   * ```cd shibboleth-identity-provider-3.2.1```
+
 3. Install Shibboleth Identity Provider:
   * ```./bin/install.sh```
-```
-root@idp:/usr/local/src/shibboleth-identity-provider-3.2.1# ./bin/install.sh
-Source (Distribution) Directory: [/usr/local/src/shibboleth-identity-provider-3.2.1]
-Installation Directory: [/opt/shibboleth-idp]
 
-Hostname: [localhost.localdomain]
-idp.example.it
+  ```
+  root@idp:/usr/local/src/shibboleth-identity-provider-3.2.1# ./bin/install.sh
+  Source (Distribution) Directory: [/usr/local/src/shibboleth-identity-provider-3.2.1]
+  Installation Directory: [/opt/shibboleth-idp]
 
-SAML EntityID: [https://idp.example.it/idp/shibboleth]
-Attribute Scope: [localdomain]
-example.it
+  Hostname: [localhost.localdomain]
+  idp.example.it
 
-Backchannel PKCS12 Password: ###PASSWORD-FOR-BACKCHANNEL###
-Re-enter password:           ###PASSWORD-FOR-BACKCHANNEL###
-Cookie Encryption Key Password: ###PASSWORD-FOR-COOKIE-ENCRYPTION###
-Re-enter password:              ###PASSWORD-FOR-COOKIE-ENCRYPTION###
-```
+  SAML EntityID: [https://idp.example.it/idp/shibboleth]
+  Attribute Scope: [localdomain]
+  example.it
+
+  Backchannel PKCS12 Password: ###PASSWORD-FOR-BACKCHANNEL###
+  Re-enter password:           ###PASSWORD-FOR-BACKCHANNEL###
+  Cookie Encryption Key Password: ###PASSWORD-FOR-COOKIE-ENCRYPTION###
+  Re-enter password:              ###PASSWORD-FOR-COOKIE-ENCRYPTION###
+  ```
   (from now "**{idp.home}**" == ```/opt/shibboleth-idp/```)
   
 4. Import JST library useful for IdP Status page:
@@ -205,18 +213,20 @@ Re-enter password:              ###PASSWORD-FOR-COOKIE-ENCRYPTION###
   * ```wget https://build.shibboleth.net/nexus/service/local/repositories/thirdparty/content/javax/servlet/jstl/1.2/jstl-1.2.jar```
   * ```cd /opt/shibboleth-idp/bin```
   * ```./build.sh -Didp.target.dir=/opt/shibboleth-idp```
-
+ 
 5.(OPTIONAL) Enable the IdP Status Web page:
-  * ```sudo vim /opt/shibboleth-idp/conf/access-control.xml```
+  * ```vim /opt/shibboleth-idp/conf/access-control.xml```
+
   ```xml
-<util:map id="shibboleth.AccessControlPolicies">
-   <entry key="AccessByIPAddress">
+  <util:map id="shibboleth.AccessControlPolicies">
+    <entry key="AccessByIPAddress">
       <bean parent="shibboleth.IPRangeAccessControl" p:allowedRanges="#{ {'127.0.0.1/32', '::1/128', 'my.idp.ip.address/24'} }" />
-   </entry>
-</util:map>
+    </entry>
+  </util:map>
   ```
 6. Give the access to the tomcat user on some IdP directory:
   * ```chown -R tomcat /opt/shibboleth-idp/logs/```
   * ```chown -R tomcat /opt/shibboleth-idp/metadata/```
   * ```chown -R tomcat /opt/shibboleth-idp/credentials/```
   * ```chown -R tomcat /opt/shibboleth-idp/conf/```
+
