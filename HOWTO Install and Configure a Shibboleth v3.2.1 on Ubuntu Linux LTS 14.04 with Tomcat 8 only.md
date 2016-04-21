@@ -17,6 +17,7 @@
  * CPU: 2 Core
  * RAM: 4 GB
  * HDD: 20 GB
+ * 
 
 ## Requirements Software
 
