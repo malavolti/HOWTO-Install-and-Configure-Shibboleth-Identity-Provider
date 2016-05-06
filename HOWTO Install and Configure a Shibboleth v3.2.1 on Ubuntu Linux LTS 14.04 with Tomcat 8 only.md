@@ -552,7 +552,7 @@
               Verify the signature on the root element of the metadata aggregate
               using a trusted metadata signing certificate.
           -->
-          <MetadataFilter xsi:type="SignatureValidation" requireSignedRoot="true" certificateFile="${idp.home}/metadata/idem_signer_2019.pem"/>
+          <MetadataFilter xsi:type="SignatureValidation" requireSignedRoot="true" certificateFile="${idp.home}/metadata/federation-cert.pem"/>
  
           <!--
               Require a validUntil XML attribute on the root element and make sure its value is no more than 14 days into the future. 
