@@ -448,43 +448,7 @@
           ```
           (This will say to IdP to store the data collected by User Consent into the "**StorageRecords**" table)
 
-6. Configure the IdP to retrieve the Federation Metadata
-  *  ```cd /opt/shibboleth-idp/conf```
-  *  ```vim metadata-providers.xml```
-      ```xml
-      <MetadataProvider
-          id="URLMD-Federation"
-          xsi:type="FileBackedHTTPMetadataProvider"
-          backingFile="%{idp.home}/federation-test-metadata-sha256.xml"
-          metadataURL="https://www.exampleFed.it/metadata/federation-test-metadatasha256.xml">
-
-          <!--
-              Verify the signature on the root element of the metadata aggregate
-              using a trusted metadata signing certificate.
-          -->
-          <MetadataFilter xsi:type="SignatureValidation" requireSignedRoot="true" certificateFile="${idp.home}/metadata/idem_signer_2019.pem"/>
- 
-          <!--
-              Require a validUntil XML attribute on the root element and make sure its value is no more than 14 days into the future. 
-          -->
-          <MetadataFilter xsi:type="RequiredValidUntil" maxValidityInterval="P14D"/>
-
-          <!-- Consume all SP metadata in the aggregate -->
-          <MetadataFilter xsi:type="EntityRoleWhiteList">
-            <RetainedRole>md:SPSSODescriptor</RetainedRole>
-          </MetadataFilter>
-      </MetadataProvider>
-      ```
-
-  * Retrive the Federation Certificate used to verify its signed metadata:
-    *  ```wget https://www.exampleFed.it/certificate/federation-cert.pem -O /opt/shibboleth-idp/metadata/federation-cert.pem```
-
-  * Check the validity:
-    *  ```cd /opt/shibboleth-idp/metadata```
-    *  ```openssl x509 -in federation-cert.pem -fingerprint -sha1 -noout```
-    *  ```openssl x509 -in federation-cert.pem -fingerprint -md5 -noout```
-
-7. Connect the openLDAP to the IdP to permit the authentication of the users:
+6. Connect the openLDAP to the IdP to permit the authentication of the users:
   *  ```vim /opt/shibboleth-idp/conf/ldap.properties```
      (with ***TLS** solutions we consider to have the LDAP certificate into ```/opt/shibboleth-idp/credentials```). To find out values like baseDN or bindDN you can use commands like:
 
@@ -533,7 +497,7 @@
           idp.authn.LDAP.bindDNCredential = ###LDAP ADMIN PASSWORD###
           ```
 
-8. Enrich IDP logs with the authentication error occurred on LDAP
+7. Enrich IDP logs with the authentication error occurred on LDAP
     *  ```vim /opt/shibboleth/conf/logback```
 
        ```xml
@@ -543,7 +507,7 @@
        <!-- Logs on LDAP user authentication -->
        <logger name="org.ldaptive.auth.Authenticator" level="INFO" />
        ```
-9. Build the **attribute-resolver.xml** to define which attributes your IdP can release *(a Federation may distribute an attribute resolver compliant with its reccomendations, here we will give a basic configuration only)*:
+8. Build the **attribute-resolver.xml** to define which attributes your IdP can release *(a Federation may distribute an attribute resolver compliant with its reccomendations, here we will give a basic configuration only)*:
     *  ```vim /opt/shibboleth/conf/services.xml```
 
        ```xml
@@ -562,7 +526,7 @@
        (Obviously, this schemas are the default ones, but for new attributes, your LDAP could need some new schemas)
        * Remove the comment from the LDAP Data Connector configured previously on ```ldap.properties```
 
-10. Translate your IdP in your language:
+9. Translate your IdP in your language:
        * Get the files translated in your language from [Shibboleth page](https://wiki.shibboleth.net/confluence/display/IDP30/MessagesTranslation) for:
           * **login page** (authn-messages_it.properties)
           * **user consent/terms of use page** (consent-messages_it.properties)
@@ -571,5 +535,44 @@
        * Put all the downloded files into ```/opt/shibboleth-idp/messages``` directory
        * Restart Tomcat by: ```service tomcat restart```
 
-11. Register your IdP on your federation with the metadata found on:
+10. Register your IdP on your federation with the metadata found on:
     *  ```https://##idp.example.it##/idp/shibboleth```
+
+11. Configure the IdP to retrieve the Federation Metadata
+  *  ```cd /opt/shibboleth-idp/conf```
+  *  ```vim metadata-providers.xml```
+      ```xml
+      <MetadataProvider
+          id="URLMD-Federation"
+          xsi:type="FileBackedHTTPMetadataProvider"
+          backingFile="%{idp.home}/federation-test-metadata-sha256.xml"
+          metadataURL="https://www.exampleFed.it/metadata/federation-test-metadatasha256.xml">
+
+          <!--
+              Verify the signature on the root element of the metadata aggregate
+              using a trusted metadata signing certificate.
+          -->
+          <MetadataFilter xsi:type="SignatureValidation" requireSignedRoot="true" certificateFile="${idp.home}/metadata/idem_signer_2019.pem"/>
+ 
+          <!--
+              Require a validUntil XML attribute on the root element and make sure its value is no more than 14 days into the future. 
+          -->
+          <MetadataFilter xsi:type="RequiredValidUntil" maxValidityInterval="P14D"/>
+
+          <!-- Consume all SP metadata in the aggregate -->
+          <MetadataFilter xsi:type="EntityRoleWhiteList">
+            <RetainedRole>md:SPSSODescriptor</RetainedRole>
+          </MetadataFilter>
+      </MetadataProvider>
+      ```
+
+  * Retrive the Federation Certificate used to verify its signed metadata:
+    *  ```wget https://www.exampleFed.it/certificate/federation-cert.pem -O /opt/shibboleth-idp/metadata/federation-cert.pem```
+
+  * Check the validity:
+    *  ```cd /opt/shibboleth-idp/metadata```
+    *  ```openssl x509 -in federation-cert.pem -fingerprint -sha1 -noout```
+    *  ```openssl x509 -in federation-cert.pem -fingerprint -md5 -noout```
+  
+11. Restart Tomcat to retrieve the Federation Metadata
+    *  ```service tomcat8 restart```
