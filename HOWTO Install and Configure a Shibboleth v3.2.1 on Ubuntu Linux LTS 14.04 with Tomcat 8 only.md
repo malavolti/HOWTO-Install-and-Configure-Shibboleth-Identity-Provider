@@ -300,9 +300,7 @@
 1. Become ROOT:
   * ```sudo su -```
 
-2. Enable the PersistentID Generator by commenting out the line containing ```SAML2PersistentGenerator``` on ```/opt/shibboleth-idp/conf/saml-nameid.xml```.
-
-3. Install a MySQL Database package and some useful libraries for Tomcat and Shibboleth:
+2. Install a MySQL Database package and some useful libraries for Tomcat and Shibboleth:
     * MySQL DB: 
       * ```apt-get istall mysql-server```
 
@@ -334,11 +332,77 @@
       * ```cp HikariCP-2.4.5.jar /opt/shibboleth-idp/edit-webapp/WEB-INF/lib/```
       * ```cd /opt/shibboleth-idp/ ; ./bin/build.sh```
 
-4. Create and prepare the "**shibboleth**" DB to host the values of the several **persistent-id** and other useful information about users consent:
+3. Create and prepare the "**shibboleth**" DB to host the values of the several **persistent-id** and other useful information about users consent:
       *  ```cd /usr/local/src/HOWTO-Shib-IdP```
       *  Modify the "**shibboleth-idp.sql**" by changing the username and password of the user that has access to the "**shibboleth**" DB.
       *  ```mysql -u root -p##PASSWORD-DB## < ./shibboleth-db.sql```
       *  ```service mysql restart```
+
+4. Enable the generation of the ```persistent-id``` (this replace the deprecated attribute "eduPersonTargetedID")
+    * ```vim /opt/shibboleth-idp/conf/saml-nameid.properties```
+      (the *sourceAttribute* MUST BE an attribute, or a list of comma-separated attributes, that uniquely identify the subject of the generated ```persistent-id```. It MUST BE: **Stable**, **Permanent** and **Not-reassignable**)
+
+      ```xml
+      idp.persistentId.sourceAttribute = uid
+      ...
+      idp.persistentId.salt = ### result of 'openssl rand -base64 36'###
+      ...
+      idp.persistentId.generator = shibboleth.StoredPersistentIdGenerator
+      ...
+      idp.persistentId.store = MyPersistentIdStore
+      ```
+    * Enable the SAML2PersistentGenerator:
+       * ```vim /opt/shibboleth-idp/conf/saml-nameid.xml```
+          * Remove the comment from the line containing:
+            ```
+            <ref bean="shibboleth.SAML2PersistentGenerator" />
+            ```
+          * Add to the head, after the first comment, this code (adapted with your DB credentials)
+
+            ```xml
+            <!-- A DataSource bean suitable for use in the idp.persistentId.dataSource property. -->
+            <bean id="MyDataSource" class="org.apache.commons.dbcp2.BasicDataSource"
+                  p:driverClassName="com.mysql.jdbc.Driver"
+                  p:url="jdbc:mysql://localhost:3306/shibboleth?autoReconnect=true"
+                  p:username="##USER_DB##"
+                  p:password="##PASSWORD##"
+                  p:maxIdle="5"
+                  p:maxWaitMillis="15000"
+                  p:testOnBorrow="true"
+                  p:validationQuery="select 1"
+                  p:validationQueryTimeout="5" />
+     
+            <!-- A "store" bean suitable for use in the idp.persistentId.store property.-->
+            <bean id="MyPersistentIdStore" parent="shibboleth.JDBCPersistentIdStore"
+                  p:dataSource-ref="MyDataSource"
+                  p:queryTimeout="PT2S"
+                  p:retryableErrors="#{{'23000'}}" />
+            ```
+
+         * ```vim /opt/shibboleth-idp/conf/c14n/subject-c14n.xml```
+            * Remove the comment to the bean called "**c14n/SAML2Persistent**".
+
+         * Modify the ***DefaultRelyingParty*** to releasing of the "persistent-id" to all, ever:
+            * ```vim /opt/shibboleth-idp/conf/relying-party.xml```
+            
+              ```xml
+              <bean id="shibboleth.DefaultRelyingParty" parent="RelyingParty">
+                 <property name="profileConfigurations">
+                    <list>
+                       <bean parent="Shibboleth.SSO" p:postAuthenticationFlows="attributerelease" />
+                       <ref bean="SAML1.AttributeQuery" />
+                       <ref bean="SAML1.ArtifactResolution" />
+                       <bean parent="SAML2.SSO" p:postAuthenticationFlows="attribute-release" p:nameIDFormatPrecedence="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent" />
+                       <ref bean="SAML2.ECP" />
+                       <ref bean="SAML2.Logout" />
+                       <ref bean="SAML2.AttributeQuery" />
+                       <ref bean="SAML2.ArtifactResolution" />
+                       <ref bean="Liberty.SSOS" />
+                    </list>
+                 </property>
+              </bean>
+              ```
+
 
 5. Enable JPAStorageService for the StorageService of the user consent:
     * ```vim /opt/shibboleth-idp/conf/global.xml``` and add to the tail of the file this code:
@@ -497,71 +561,6 @@
    
        (Obviously, this schemas are the default ones, but for new attributes, your LDAP could need some new schemas)
        * Remove the comment from the LDAP Data Connector configured previously on ```ldap.properties```
-
-10. Enable the generation of the ```persistent-id``` (this replace the deprecated attribute "eduPersonTargetedID")
-    * ```vim /opt/shibboleth-idp/conf/saml-nameid.properties```
-      (the *sourceAttribute* MUST BE an attribute, or a list of comma-separated attributes, that uniquely identify the subject of the generated ```persistent-id```. It MUST BE: **Stable**, **Permanent** and **Not-reassignable**)
-
-      ```xml
-      idp.persistentId.sourceAttribute = uid
-      ...
-      idp.persistentId.salt = ### result of 'openssl rand -base64 36'###
-      ...
-      idp.persistentId.generator = shibboleth.StoredPersistentIdGenerator
-      ...
-      idp.persistentId.store = MyPersistentIdStore
-      ```
-    * Enable the SAML2PersistentGenerator:
-       * ```vim /opt/shibboleth-idp/conf/saml-nameid.xml```
-          * Remove the comment from the line containing:
-            ```
-            <ref bean="shibboleth.SAML2PersistentGenerator" />
-            ```
-          * Add to the head, after the first comment, this code (adapted with your DB credentials)
-
-            ```xml
-            <!-- A DataSource bean suitable for use in the idp.persistentId.dataSource property. -->
-            <bean id="MyDataSource" class="org.apache.commons.dbcp2.BasicDataSource"
-                  p:driverClassName="com.mysql.jdbc.Driver"
-                  p:url="jdbc:mysql://localhost:3306/shibboleth?autoReconnect=true"
-                  p:username="##USER_DB##"
-                  p:password="##PASSWORD##"
-                  p:maxIdle="5"
-                  p:maxWaitMillis="15000"
-                  p:testOnBorrow="true"
-                  p:validationQuery="select 1"
-                  p:validationQueryTimeout="5" />
-     
-            <!-- A "store" bean suitable for use in the idp.persistentId.store property.-->
-            <bean id="MyPersistentIdStore" parent="shibboleth.JDBCPersistentIdStore"
-                  p:dataSource-ref="MyDataSource"
-                  p:queryTimeout="PT2S"
-                  p:retryableErrors="#{{'23000'}}" />
-            ```
-
-         * ```vim /opt/shibboleth-idp/conf/c14n/subject-c14n.xml```
-            * Remove the comment to the bean called "**c14n/SAML2Persistent**".
-
-         * Modify the ***DefaultRelyingParty*** to releasing of the "persistent-id" to all, ever:
-            * ```vim /opt/shibboleth-idp/conf/relying-party.xml```
-            
-              ```xml
-              <bean id="shibboleth.DefaultRelyingParty" parent="RelyingParty">
-                 <property name="profileConfigurations">
-                    <list>
-                       <bean parent="Shibboleth.SSO" p:postAuthenticationFlows="attributerelease" />
-                       <ref bean="SAML1.AttributeQuery" />
-                       <ref bean="SAML1.ArtifactResolution" />
-                       <bean parent="SAML2.SSO" p:postAuthenticationFlows="attribute-release" p:nameIDFormatPrecedence="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent" />
-                       <ref bean="SAML2.ECP" />
-                       <ref bean="SAML2.Logout" />
-                       <ref bean="SAML2.AttributeQuery" />
-                       <ref bean="SAML2.ArtifactResolution" />
-                       <ref bean="Liberty.SSOS" />
-                    </list>
-                 </property>
-              </bean>
-              ```
 
 10. Translate your IdP in your language:
        * Get the files translated in your language from [Shibboleth page](https://wiki.shibboleth.net/confluence/display/IDP30/MessagesTranslation) for:
