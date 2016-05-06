@@ -163,7 +163,6 @@
         scheme="https" secure="true" SSLEnabled="true"
         SSLCertificateFile="/opt/tomcat/ssl/cert-server.pem"
         SSLCertificateKeyFile="/opt/tomcat/ssl/key-server.pem"
-        SSLCertificateChainFile="/opt/tomcat/ssl/Terena-chain.pem"
         SSLVerifyClient="optional" SSLProtocol="TLSv1+TLSv1.1+TLSv1.2"/>
     ...
     ```
@@ -275,10 +274,7 @@
 5. Modify the ```context.xml``` file to avoid errors on “*lack of persistence of the session objects*” created by the IdP:
   * ```vim $CATALINA_HOME/conf/context.xml``` and remove the comment to```<Manager pathname="" />```
 
-6. Retrive TERENA Chain:
-  * ```wget https://ca.garr.it/mgt/Terena-chain.pem -O $CATALINA_HOME/ssl/Terena-chain.pem```
-
-7. Speed Up Tomcat 8 instance:
+6. Speed Up Tomcat 8 instance:
   * Find JAR that can be not scanned at boot of Tomcat with:
     * ```cd /opt/shibboleth-idp/```
     * ```ls webapp/WEB-INF/lib | awk '{print $1",\\"}'```
@@ -286,16 +282,16 @@
     * Save the changes and restart tomcat:
       * ```service tomcat restart```
 
-8. Modify your "**hosts**" file:
+7. Modify your "**hosts**" file:
     * ```vim /etc/hosts```
   
       ```127.0.1.1 idp.example.it idp```
 
-9. Try your IdP:
-    1. If **YOU HAVE** followed the optional point 4.2.8, then open a page like the following on your preferred browser:
+8. Try your IdP:
+    1. If **YOU HAVE** followed the optional point 4.ii.5, then open a page like the following on your preferred browser:
       "```https://idp.example.garr.it/idp/status```" and, if you see the status of the IdP, you have installed correctly.
 
-    2. If **YOU DON'T HAVE** followed the optional point 4.2.8, then open a terminal and run the command 
+    2. If **YOU DON'T HAVE** followed the optional point 4.ii.5, then open a terminal and run the command 
     "```cd /opt/shibboleth-idp/bin ; ./status.sh```"
     and, if you see the status of the IdP, you have installed correctly.
   
