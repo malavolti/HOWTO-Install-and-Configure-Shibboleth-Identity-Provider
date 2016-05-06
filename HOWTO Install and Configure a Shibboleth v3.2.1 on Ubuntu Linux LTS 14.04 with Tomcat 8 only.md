@@ -5,11 +5,13 @@
 1. [Requirements Hardware](#requirements-hardware)
 2. [Requirements Software](#requirements-software)
 3. [Other Requirements](#other-requirements)
-4. [Installation Instruction](#installation-instructions)
+4. [Installation Instructions](#installation-instructions)
   1. [Install software requirements](#install-software-requirements)
   2. [Install Shibboleth Identity Provider v3.2.1](#install-shibboleth-identity-provider-v321)
-  3. [Configure Apache Tomcat 8](#configure-apache-tomcat-8)
-  4. [Configure Shibboleth Identity Provider v3.2.1 to release the persistent-id (Stored Mode)](#configure-shibboleth-identity-provider-v321-to-release-the-persistent-id-stored-mode)
+5. [Configuration Instructions](#configuration-instructions)
+  1. [Configure Apache Tomcat 8](#configure-apache-tomcat-8)
+  2. [Configure Shibboleth Identity Provider v3.2.1 to release the persistent-id (Stored Mode)](#configure-shibboleth-identity-provider-v321-to-release-the-persistent-id-stored-mode)
+  3. [Configure Attribute Filter for Research and Scholarship Entity Category](#configure-attribute-filter-for-research-and-scholarship-entity-category)
 
 
 ## Requirements Hardware
@@ -241,6 +243,8 @@
   * ```chown -R tomcat /opt/shibboleth-idp/metadata/```
   * ```chown -R tomcat /opt/shibboleth-idp/credentials/```
   * ```chown -R tomcat /opt/shibboleth-idp/conf/```
+
+## Configuration Instructions
 
 ### Configure Apache Tomcat 8
 
@@ -575,4 +579,21 @@
     *  ```openssl x509 -in federation-cert.pem -fingerprint -md5 -noout```
   
 11. Restart Tomcat to retrieve the Federation Metadata
+    *  ```service tomcat8 restart```
+
+### Configure Attribute Filter for Research and Scholarship Entity Category
+
+1. Retrieve the attribute filter Research and Scholarship compliant:
+  *  Download the [R&S Attribute Filter](../blob/master/attribute-filter-rs.xml) inside ```cd /opt/shibboleth-idp/conf```
+  
+2. Modify your ```services.xml```:
+  *  ```vim /opt/shibboleth-idp/conf/services.xml```
+
+     ```xml
+     <util:list id ="shibboleth.AttributeFilterResources">
+        <value>%{idp.home}/conf/attribute-filter.xml</value>
+        <value>%{idp.home}/conf/attribute-filter-rs.xml</value>
+     </util:list>
+     ```
+3. Restart Tomcat to apply the changes:
     *  ```service tomcat8 restart```
