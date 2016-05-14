@@ -311,7 +311,7 @@
 
 6. Create and prepare the "**shibboleth**" DB to host the values of the several **persistent-id** and other useful information about user consent:
   *  ```cd /usr/local/src/HOWTO-Shib-IdP```
-  *  Modify the [shibboleth-idp.sql](../master/shibboleth-idp.sql) by changing the *username* and *password* of the user that has access to the "**shibboleth**" DB.
+  *  Modify the [shibboleth-db.sql](../master/shibboleth-db.sql) by changing the *username* and *password* of the user that has access to the "**shibboleth**" DB.
   *  ```mysql -u root -p##PASSWORD-DB## < ./shibboleth-db.sql```
   *  ```service mysql restart```
 
