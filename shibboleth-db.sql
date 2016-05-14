@@ -4,7 +4,7 @@ SET CHARACTER SET utf8;
 
 CREATE DATABASE IF NOT EXISTS shibboleth CHARACTER SET=utf8;
 
-GRANT ALL PRIVILEGES ON shibboleth.* TO root@localhost IDENTIFIED BY 'root_db_password';
+GRANT ALL PRIVILEGES ON shibboleth.* TO root@localhost IDENTIFIED BY '##ROOT-DB-PASSWORD##';
 
 FLUSH PRIVILEGES;
 
@@ -38,7 +38,7 @@ USE mysql;
 /* Change the value of 'demo' work with the preferred password for shibboleth DB */
 INSERT INTO user (Host, User, Password, Select_priv,Insert_priv,Update_priv, Delete_priv, Create_tmp_table_priv, Lock_tables_priv,Execute_priv) VALUES ('localhost','idem',PASSWORD('demo'),'Y','Y','Y','Y','Y','Y','Y');
 
-GRANT ALL PRIVILEGES ON shibboleth.* TO idem@localhost IDENTIFIED BY 'demo';
+GRANT ALL PRIVILEGES ON shibboleth.* TO ###USERNAME###@localhost IDENTIFIED BY '###PASSWORD###';
 
 FLUSH PRIVILEGES;
 
