@@ -289,8 +289,17 @@
   * ```tar xzvf commons-dbcp2-2.1.1-bin.tar.gz ; cd commons-dbcp2-2.1.1/```
   * ```cp commons-dbcp2-2.1.1.jar /opt/shibboleth-idp/edit-webapp/WEBINF/lib/```
   
-4. Install the libraries Tomcat Common Pool used for the generation of saml-id:
+4. Install the libraries **Tomcat Common Pool** used for the generation of saml-id:
   * ```cd /usr/local/src/```
+  * ```wget http://mirror.nohup.it/apache//commons/pool/binaries/commonspool2-2.4.2-bin.tar.gz```
+  * ```tar xzvf commons-pool2-2.4.2-bin.tar.gz ; cd commons-pool2-2.4.2/```
+  * ```cp commons-pool2-2.4.2.jar /opt/shibboleth-idp/edit-webapp/WEBINF/lib/```
+
+5. Rebuild the **idp.war** of Shibboleth with the new libraries:
+  * ``` ```
+  * ``` ```
+  * ``` ```
+  * ``` ```
   * ``` ```
   * ``` ```
   * ``` ```
