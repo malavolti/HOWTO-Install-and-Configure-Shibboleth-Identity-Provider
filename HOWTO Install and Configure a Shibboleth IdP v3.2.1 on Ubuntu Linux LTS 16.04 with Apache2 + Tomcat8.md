@@ -256,7 +256,7 @@
 4. Enable proxy_ajp apache2 module and the new IdP site:
   * ```a2enmod proxy_ajp ; a2ensite idp.conf ; service apache2 restart```
   
-5. Modify context.xml to prevent error of **lack of persistence of the session objects* created by the IdP :
+5. Modify **context.xml** to prevent error of *lack of persistence of the session objects* created by the IdP :
   * ```vim /etc/tomcat8/context.xml```
 
     and remove the comment from:
@@ -289,7 +289,7 @@
   * ```cd /opt/shibboleth-idp/bin```
   * ```./status.sh``` (You shuold see some informations about the IdP installed)
 
-2. Install a MySQL database and import the libraries used by Tomcat and Shibboleth:
+2. Install ```MySQL Connector Java``` and ```Tomcat JDBC``` libraries used by Tomcat and Shibboleth for MySQL DB:
   * ```apt-get istall mysql-server libmysql-java```
   * ```cp /usr/share/java/mysql-connector-java.jar /opt/shibboleth-idp/editwebapp/WEB-INF/lib/```
   * ```cp /usr/share/java/mysql-connector-java.jar /usr/share/tomcat8/lib/```
@@ -310,7 +310,7 @@
 5. Rebuild the **idp.war** of Shibboleth with the new libraries:
   * ```cd /opt/shibboleth-idp/ ; ./bin/build.sh```
 
-6. Create and prepare the "**shibboleth**" DB to host the values of the several **persistent-id** and other useful information about user consent:
+6. Create and prepare the "**shibboleth**" MySQL DB to host the values of the several **persistent-id** and **StorageRecords** to host other useful information about user consent:
   *  ```cd /usr/local/src/HOWTO-Shib-IdP```
   *  Modify the [shibboleth-db.sql](../master/shibboleth-db.sql) by changing the *username* and *password* of the user that has access to the "**shibboleth**" DB.
   *  ```mysql -u root -p##PASSWORD-DB## < ./shibboleth-db.sql```
@@ -482,6 +482,23 @@
       idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=garr,dc=it
       idp.authn.LDAP.bindDNCredential = ###LDAP ADMIN PASSWORD###
       ```
+      (If you decide to use the Solution 3, you have to remove the following code from your ```attribute-resolver-full.xml```:
+      
+      ```xml
+      </dc:FilterTemplate>
+      <!--
+      <dc:StartTLSTrustCredential id="LDAPtoIdPCredential" xsi:type="sec:X509ResourceBacked">
+        <sec:Certificate>%
+          {idp.attribute.resolver.LDAP.trustCertificates}</sec:Certificate>
+        </dc:StartTLSTrustCredential>
+      -->
+      </resolver:DataConnector>
+      ```
+
+**UTILITY FOR OPENLDAP ADMINISTRATOR:**
+  * ldapsearch -H ldap:// -x -b "dc=example,dc=it" -LLL dn
+    * the baseDN ==> ou=people, dc=example,dc=it (branch containing the registered users)
+    * the bindDN ==> cn=admin,dc=example,dc=it (distinguished name for the user that can made queries on the LDAP)
 
 10. Enrich IDP logs with the authentication error occurred on LDAP
   * ```vim /opt/shibboleth/conf/logback```
@@ -523,10 +540,26 @@
   * Put all the downloded files into ```/opt/shibboleth-idp/messages``` directory
     * Restart Tomcat by: ```service tomcat restart```
 
-13. Register your IdP on your federation with the metadata found on:
+13. Enable the SAML2 support by changing the ```idp-metadata.xml``` and disable the SAML v1.x deprecated support:
+  * ```vim /opt/shibboleth-idp/metadata.xml```
+    ```bash
+    STRINGS TO REMOVE:
+      – urn:oasis:names:tc:SAML:1.1:protocol
+      – urn:mace:shibboleth:1.0
+      – Entire endpoint with Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAPbinding" (and change the index in the right way)
+      – <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
+      – Entire endpoint with Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" (and change the index in the right way)
+      – 8443 (everywhere, because we don't use it)
+      
+    IN THE ATTRIBUTE-AUTHORITY SECTION:
+    – Replace "urn:oasis:names:tc:SAML:1.1:protocol" with "urn:oasis:names:tc:SAML:2.0:protocol"
+    - Remove the comment from the AttributeService SAML2 and comment out the SAMLv1 one.
+    ```
+
+14. Register your IdP on your federation with the metadata found on:
   *  ```https://##idp.example.it##/idp/shibboleth```
 
-14. Configure the IdP to retrieve the Federation Metadata
+15. Configure the IdP to retrieve the Federation Metadata
   * ```cd /opt/shibboleth-idp/conf```
   * ```vim metadata-providers.xml```
 
