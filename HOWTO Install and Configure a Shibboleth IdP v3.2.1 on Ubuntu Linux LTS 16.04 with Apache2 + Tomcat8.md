@@ -92,6 +92,10 @@
     JAVA_OPTS="-Djava.awt.headless=true -XX:+DisableExplicitGC -XX:+UseParallelOldGC -Xms256m -Xmx2g -Djava.security.egd=file:/dev/./urandom"
     ```
 
+    (This settings configure the memory of the JVM that will host the IdP Web Application. 
+    The Memory value depends on the phisical memory installed on the machine. 
+    Set the "**Xmx**" (max heap space available to the JVM) at least to **2GB**)
+
 ### Install Shibboleth Identity Provider v3.2.1
 
 0. Become ROOT of the machine: 
@@ -140,50 +144,55 @@
 
 1. Modify the file ```/etc/apache2/sites-available/default-ssl.conf``` as follows:
 
-```apache
-<VirtualHost _default_:443>
- ServerName idp.example.garr.it:443
- ServerAdmin admin@example.garr.it
- DocumentRoot /var/www/html
- ...
- SSLEngine On
- SSLProtocol all -SSLv2 -SSLv3 -TLSv1
- SSLCipherSuite "kEDH+AESGCM:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES256-GCMSHA384:ECDHE-RSA-AES256-GCM-SHA256:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-ECDSAAES256-SHA384:ECDHE-ECDSA-AES256-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSAAES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA256:AES256-GCM-SHA384:!3DES:!DES:!DHE-RSA-AES128-GCM-SHA256:!DHE-RSA-AES256-SHA:!EDE3:!EDH-DSS-CBC-SHA:!EDH-DSSDES-CBC3-SHA:!EDH-RSA-DES-CBC-SHA:!EDH-RSA-DES-CBC3-SHA:!EXP-EDH-DSS-DES-CBCSHA:!EXP-EDH-RSA-DES-CBC-SHA:!EXPORT:!MD5:!PSK:!RC4-SHA:!aNULL:!eNULL"
- SSLHonorCipherOrder on
- # Disable SSL Compression
- SSLCompression Off
- # Enable HTTP Strict Transport Security with a 2 year duration
- Header always set Strict-Transport-Security "max-age=63072000;includeSubDomains"
- ...
- SSLCertificateFile /root/certificates/idp-cert-server.pem
- SSLCertificateKeyFile /root/certificates/idp-key-server.pem
- ...
-</VirtualHost>
-```
-
-2. Enable **SSL** and "headers" Apache2 modules:
-* ```a2enmod ssl headers```
-* ```a2ensite default-ssl.conf```
-* ```a2dissite 000-default.conf```
-* ```service apache2 restart```
-
-3. Configure Apache2 to open port 80 only for localhost:
-* ```vim /etc/apache2/ports.conf```
-
   ```apache
-  # If you just change the port or add more ports here, you will likely also
-  # have to change the VirtualHost statement in
-  # /etc/apache2/sites-enabled/000-default.conf
-  
-  Listen 127.0.0.1:80
-
-  <IfModule ssl_module>
-    Listen 443
-  </IfModule>
-  <IfModule mod_gnutls.c>
-    Listen 443
-  </IfModule>
+  <VirtualHost _default_:443>
+    ServerName idp.example.garr.it:443
+    ServerAdmin admin@example.garr.it
+    DocumentRoot /var/www/html
+    ...
+    SSLEngine On
+    SSLProtocol all -SSLv2 -SSLv3 -TLSv1
+    
+    SSLCipherSuite "kEDH+AESGCM:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES256-GCMSHA384:ECDHE-RSA-AES256-GCM-SHA256:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-ECDSAAES256-SHA384:ECDHE-ECDSA-AES256-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSAAES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA256:AES256-GCM-SHA384:!3DES:!DES:!DHE-RSA-AES128-GCM-SHA256:!DHE-RSA-AES256-SHA:!EDE3:!EDH-DSS-CBC-SHA:!EDH-DSSDES-CBC3-SHA:!EDH-RSA-DES-CBC-SHA:!EDH-RSA-DES-CBC3-SHA:!EXP-EDH-DSS-DES-CBCSHA:!EXP-EDH-RSA-DES-CBC-SHA:!EXPORT:!MD5:!PSK:!RC4-SHA:!aNULL:!eNULL"
+    
+    SSLHonorCipherOrder on
+    
+    # Disable SSL Compression
+    SSLCompression Off
+    # Enable HTTP Strict Transport Security with a 2 year duration
+    Header always set Strict-Transport-Security "max-age=63072000;includeSubDomains"
+    ...
+    
+    SSLCertificateFile /root/certificates/idp-cert-server.pem
+    SSLCertificateKeyFile /root/certificates/idp-key-server.pem
+    ...
+  </VirtualHost>
   ```
+
+2. Enable **SSL** and **headers** Apache2 modules:
+  * ```a2enmod ssl headers```
+  * ```a2ensite default-ssl.conf```
+  * ```a2dissite 000-default.conf```
+  * ```service apache2 restart```
+
+3. Configure Apache2 to open port **80** only for localhost:
+  * ```vim /etc/apache2/ports.conf```
+
+    ```apache
+    # If you just change the port or add more ports here, you will likely also
+    # have to change the VirtualHost statement in
+    # /etc/apache2/sites-enabled/000-default.conf
+  
+    Listen 127.0.0.1:80
+
+    <IfModule ssl_module>
+      Listen 443
+    </IfModule>
+    
+    <IfModule mod_gnutls.c>
+      Listen 443
+    </IfModule>
+    ```
   
 4. Verify the strength of your IdP's machine on:
   * [**https://www.ssllabs.com/ssltest/analyze.html**](https://www.ssllabs.com/ssltest/analyze.html)
@@ -232,7 +241,6 @@
     ```
 
 3. Create the Apache2 configuration file for IdP:
-
   * ```vim /etc/apache2/sites-available/idp.conf```
   
     ```apache
@@ -303,7 +311,7 @@
 
 6. Create and prepare the "**shibboleth**" DB to host the values of the several **persistent-id** and other useful information about user consent:
   *  ```cd /usr/local/src/HOWTO-Shib-IdP```
-  *  Modify the "**shibboleth-idp.sql**" by changing the username and password of the user that has access to the "**shibboleth**" DB.
+  *  Modify the "**shibboleth-idp.sql**" by changing the *username* and *password* of the user that has access to the "**shibboleth**" DB.
   *  ```mysql -u root -p##PASSWORD-DB## < ./shibboleth-db.sql```
   *  ```service mysql restart```
 
@@ -323,10 +331,9 @@
 
   * Enable the SAML2PersistentGenerator:
     * ```vim /opt/shibboleth-idp/conf/saml-nameid.xml```
-
       * Remove the comment from the line containing:
 
-        ```
+        ```xml
         <ref bean="shibboleth.SAML2PersistentGenerator" />
         ```
 
@@ -377,39 +384,38 @@
             ```
 
 8. Enable JPAStorageService for the StorageService of the user consent:
-  * ```vim /opt/shibboleth-idp/conf/global.xml``` and add to the tail of the file this code:
+  * ```vim /opt/shibboleth-idp/conf/global.xml``` and add to the tail of the file this piece code:
 
     ```xml
     <bean id="shibboleth.JPAStorageService" class="org.opensaml.storage.impl.JPAStorageService"
           p:cleanupInterval="%{idp.storage.cleanupInterval:PT10M}"
           c:factory-ref="shibboleth.JPAStorageService.entityManagerFactory"/>
 
-      <bean id="shibboleth.JPAStorageService.entityManagerFactory"
-            class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
-            <property name="packagesToScan" value="org.opensaml.storage.impl"/>
-            <property name="dataSource" ref="shibboleth.JPAStorageService.DataSource"/>
-            <property name="jpaVendorAdapter" ref="shibboleth.JPAStorageService.JPAVendorAdapter"/>
-            <property name="jpaDialect">
-              <bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
-            </property>
-      </bean>
+    <bean id="shibboleth.JPAStorageService.entityManagerFactory"
+          class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+          <property name="packagesToScan" value="org.opensaml.storage.impl"/>
+          <property name="dataSource" ref="shibboleth.JPAStorageService.DataSource"/>
+          <property name="jpaVendorAdapter" ref="shibboleth.JPAStorageService.JPAVendorAdapter"/>
+          <property name="jpaDialect">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
+          </property>
+    </bean>
 
-      <bean id="shibboleth.JPAStorageService.JPAVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
-             <property name="database" value="MYSQL" />
-      </bean>
+    <bean id="shibboleth.JPAStorageService.JPAVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+            <property name="database" value="MYSQL" />
+    </bean>
 
-      <bean id="shibboleth.JPAStorageService.DataSource"
-            class="org.apache.tomcat.jdbc.pool.DataSource" 
-            destroy-method="close" 
-            lazy-init="true" 
-            p:driverClassName="com.mysql.jdbc.Driver" 
-            p:url="jdbc:mysql://localhost:3306/shibboleth?autoReconnect=true&amp;sessionVariables=wait_timeout=31536000"
-            p:validationQuery="SELECT 1;"
-            p:username="##USER_DB_NAME##"
-            p:password="##PASSWORD##" />
-       ```
-
-       (and modify the "**USER_DB_NAME**" and "**PASSWORD**" of the "**shibboleth**" DB)
+    <bean id="shibboleth.JPAStorageService.DataSource"
+          class="org.apache.tomcat.jdbc.pool.DataSource" 
+          destroy-method="close" 
+          lazy-init="true" 
+          p:driverClassName="com.mysql.jdbc.Driver" 
+          p:url="jdbc:mysql://localhost:3306/shibboleth?autoReconnect=true&amp;sessionVariables=wait_timeout=31536000"
+          p:validationQuery="SELECT 1;"
+          p:username="##USER_DB_NAME##"
+          p:password="##PASSWORD##" />
+    ```
+    (and modify the "**USER_DB_NAME**" and "**PASSWORD**" of the "**shibboleth**" DB)
 
   * Modify the IdP configuration file:
     * ```vim /opt/shibboleth-idp/conf/idp.properties```
@@ -502,6 +508,7 @@
     * Remove comment from "**Schema: Core Schema attributes**"
     * Remove comment from "**Schema: InetOrgPerson attributes**"
     * Remove comment from "**Schema: eduPerson attributes**"
+
     (Obviously, this schemas are the default ones, but for new attributes, your LDAP could need some new schemas)
     
     * Remove the comment from the LDAP Data Connector configured previously on ```ldap.properties```
@@ -555,8 +562,9 @@
     *  ```openssl x509 -in federation-cert.pem -fingerprint -sha1 -noout```
     *  ```openssl x509 -in federation-cert.pem -fingerprint -md5 -noout```
   
-15. Restart Tomcat to retrieve the Federation Metadata
-  *  ```service tomcat8 restart```
+15. Reload service with id ```shibboleth.MetadataResolverService``` to retrieve the Federation Metadata:
+  *  ```cd /opt/shibboleth-idp/bin```
+  *  ```./reload-service.sh -id shibboleth.MetadataResolverService```
 
 ### Configure Attribute Filter for Research and Scholarship Entity Category
 
@@ -573,5 +581,6 @@
      </util:list>
      ```
 
-3. Restart Tomcat to apply the changes:
-    *  ```service tomcat8 restart```
+3. Reload service with id ```shibboleth.AttributeFilterService``` to refresh the Attribute Filter followed by the IdP:
+  *  ```cd /opt/shibboleth-idp/bin```
+  *  ```./reload-service.sh -id shibboleth.AttributeFilterService```
