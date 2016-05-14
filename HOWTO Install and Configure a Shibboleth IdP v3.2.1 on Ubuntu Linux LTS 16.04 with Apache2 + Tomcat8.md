@@ -59,9 +59,9 @@
     127.0.1.1 idp.example.org idp
     ```
 
-1. Be sure that your firewall doesn't block the traffic on port **443** (or you can't access to your IdP)
+1. Be sure that your firewall **doesn't block** the traffic on port **443** (or you can't access to your IdP)
 
-2. Define the global costants ```JAVA_HOME``` and ```IDP_SRC``` inside ```/etc/environment```:
+2. Define the costants ```JAVA_HOME``` and ```IDP_SRC``` inside ```/etc/environment```:
   * ```vim /etc/environment```
 
     ```bash
@@ -133,7 +133,7 @@
   * ```wget https://build.shibboleth.net/nexus/service/local/repositories/thirdparty/content/javax/servlet/jstl/1.2/jstl-1.2.jar```
   * ```cd /opt/shibboleth-idp/bin ; ./build.sh -Didp.target.dir=/opt/shibboleth-idp```
 
-4. Change the rights to enable tomcat8 user to access on the following directories:
+4. Change the rights to enable **tomcat8** user to access on the following directories:
   * ```chown -R tomcat8 /opt/shibboleth-idp/logs/```
   * ```chown -R tomcat8 /opt/shibboleth-idp/metadata/```
   * ```chown -R tomcat8 /opt/shibboleth-idp/credentials/```
@@ -147,8 +147,8 @@
 
   ```apache
   <VirtualHost _default_:443>
-    ServerName idp.example.garr.it:443
-    ServerAdmin admin@example.garr.it
+    ServerName idp.example.it:443
+    ServerAdmin admin@example.it
     DocumentRoot /var/www/html
     ...
     SSLEngine On
@@ -203,7 +203,7 @@
 0. Become ROOT of the machine: 
   * ```sudo su -```
 
-1. Change "server.xml":
+1. Change ```server.xml```:
   * ```vim /etc/tomcat8/server.xml```
   
     Comment out the Connector 8080 (HTTP):
@@ -253,7 +253,7 @@
     ProxyPassReverse /idp ajp://localhost:8009/idp retry=5
     ```
 
-4. Enable proxy_ajp apache2 module and the new IdP site:
+4. Enable **proxy_ajp** apache2 module and the new IdP site:
   * ```a2enmod proxy_ajp ; a2ensite idp.conf ; service apache2 restart```
   
 5. Modify **context.xml** to prevent error of *lack of persistence of the session objects* created by the IdP :
@@ -289,7 +289,7 @@
   * ```cd /opt/shibboleth-idp/bin```
   * ```./status.sh``` (You shuold see some informations about the IdP installed)
 
-2. Install ```MySQL Connector Java``` and ```Tomcat JDBC``` libraries used by Tomcat and Shibboleth for MySQL DB:
+2. Install **MySQL Connector Java** and **Tomcat JDBC** libraries used by Tomcat and Shibboleth for MySQL DB:
   * ```apt-get istall mysql-server libmysql-java```
   * ```cp /usr/share/java/mysql-connector-java.jar /opt/shibboleth-idp/editwebapp/WEB-INF/lib/```
   * ```cp /usr/share/java/mysql-connector-java.jar /usr/share/tomcat8/lib/```
@@ -330,7 +330,7 @@
     idp.persistentId.store = MyPersistentIdStore
     ```
 
-  * Enable the SAML2PersistentGenerator:
+  * Enable the **SAML2PersistentGenerator**:
     * ```vim /opt/shibboleth-idp/conf/saml-nameid.xml```
       * Remove the comment from the line containing:
 
@@ -384,7 +384,7 @@
             </bean>
             ```
 
-8. Enable JPAStorageService for the StorageService of the user consent:
+8. Enable **JPAStorageService** for the **StorageService** of the user consent:
   * ```vim /opt/shibboleth-idp/conf/global.xml``` and add to the tail of the file this piece code:
 
     ```xml
@@ -444,14 +444,14 @@
 
       ```xml
       idp.authn.LDAP.authenticator = bindSearchAuthenticator
-      idp.authn.LDAP.ldapURL = ldap://ldap.example.garr.it:389
+      idp.authn.LDAP.ldapURL = ldap://ldap.example.it:389
       idp.authn.LDAP.useStartTLS = true
       idp.authn.LDAP.useSSL = false
       idp.authn.LDAP.sslConfig = certificateTrust
       idp.authn.LDAP.trustCertificates = %{idp.home}/credentials/ldap-server.crt
-      idp.authn.LDAP.baseDN = ou=people,dc=example,dc=garr,dc=it
+      idp.authn.LDAP.baseDN = ou=people,dc=example,dc=it
       idp.authn.LDAP.userFilter = (uid={user})
-      idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=garr,dc=it
+      idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=it
       idp.authn.LDAP.bindDNCredential = ###LDAP ADMIN PASSWORD###
       ```
 
@@ -459,14 +459,14 @@
 
       ```xml
       idp.authn.LDAP.authenticator = bindSearchAuthenticator
-      idp.authn.LDAP.ldapURL = ldaps://ldap.example.garr.it:636
+      idp.authn.LDAP.ldapURL = ldaps://ldap.example.it:636
       idp.authn.LDAP.useStartTLS = false
       idp.authn.LDAP.useSSL = true
       idp.authn.LDAP.sslConfig = certificateTrust
       idp.authn.LDAP.trustCertificates = %{idp.home}/credentials/ldap-server.crt
-      idp.authn.LDAP.baseDN = ou=people,dc=example,dc=garr,dc=it
+      idp.authn.LDAP.baseDN = ou=people,dc=example,dc=it
       idp.authn.LDAP.userFilter = (uid={user})
-      idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=garr,dc=it
+      idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=it
       idp.authn.LDAP.bindDNCredential = ###LDAP ADMIN PASSWORD###
       ```
 
@@ -474,12 +474,12 @@
   
       ```xml
       idp.authn.LDAP.authenticator = bindSearchAuthenticator
-      idp.authn.LDAP.ldapURL = ldap://ldap.example.garr.it:389
+      idp.authn.LDAP.ldapURL = ldap://ldap.example.it:389
       idp.authn.LDAP.useStartTLS = false
       idp.authn.LDAP.useSSL = false
-      idp.authn.LDAP.baseDN = ou=people,dc=example,dc=garr,dc=it
+      idp.authn.LDAP.baseDN = ou=people,dc=example,dc=it
       idp.authn.LDAP.userFilter = (uid={user})
-      idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=garr,dc=it
+      idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=it
       idp.authn.LDAP.bindDNCredential = ###LDAP ADMIN PASSWORD###
       ```
       (If you decide to use the Solution 3, you have to remove the following code from your ```attribute-resolver-full.xml```:
@@ -494,11 +494,12 @@
       -->
       </resolver:DataConnector>
       ```
-
+------------------------------------------------------------------------------------------------------------------
 **UTILITY FOR OPENLDAP ADMINISTRATOR:**
   * ldapsearch -H ldap:// -x -b "dc=example,dc=it" -LLL dn
     * the baseDN ==> ou=people, dc=example,dc=it (branch containing the registered users)
     * the bindDN ==> cn=admin,dc=example,dc=it (distinguished name for the user that can made queries on the LDAP)
+------------------------------------------------------------------------------------------------------------------
 
 10. Enrich IDP logs with the authentication error occurred on LDAP
   * ```vim /opt/shibboleth/conf/logback```
@@ -531,7 +532,7 @@
     
     * Remove the comment from the LDAP Data Connector configured previously on ```ldap.properties```
 
-12. Translate your IdP in your language:
+12. Translate the IdP messages in your language:
   * Get the files translated in your language from [Shibboleth page](https://wiki.shibboleth.net/confluence/display/IDP30/MessagesTranslation) for:
     * **login page** (authn-messages_it.properties)
     * **user consent/terms of use page** (consent-messages_it.properties)
@@ -540,7 +541,7 @@
   * Put all the downloded files into ```/opt/shibboleth-idp/messages``` directory
     * Restart Tomcat by: ```service tomcat restart```
 
-13. Enable the SAML2 support by changing the ```idp-metadata.xml``` and disable the SAML v1.x deprecated support:
+13. Enable the SAML2 support by changing the ```idp-metadata.xml``` and disabling the SAML v1.x deprecated support:
   * ```vim /opt/shibboleth-idp/metadata.xml```
     ```bash
     STRINGS TO REMOVE:
@@ -559,7 +560,7 @@
 14. Register your IdP on your federation with the metadata found on:
   *  ```https://##idp.example.it##/idp/shibboleth```
 
-15. Configure the IdP to retrieve the Federation Metadata
+15. Configure the IdP to retrieve the Federation Metadata:
   * ```cd /opt/shibboleth-idp/conf```
   * ```vim metadata-providers.xml```
 
