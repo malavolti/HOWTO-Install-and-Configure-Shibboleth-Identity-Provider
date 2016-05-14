@@ -62,12 +62,11 @@
 
 2. Define the global costants ```JAVA_HOME``` and ```IDP_SRC``` inside ```/etc/environment```:
   * ```vim /etc/environment```
-  
+
     ```bash
     JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre
     IDP_SRC=/usr/local/src/shibboleth-identity-provider-3.2.1
     ```
-
   * ```source /etc/environment```
   * ```export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre```
   * ```export IDP_SRC=/usr/local/src/shibboleth-identity-provider-3.2.1```
