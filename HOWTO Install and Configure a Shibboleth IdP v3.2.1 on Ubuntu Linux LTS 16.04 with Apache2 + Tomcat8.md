@@ -128,13 +128,13 @@
   
   From this point the variable **idp.home** refers to the directory: ```/opt/shibboleth-idp```
 
-3. Import the libraries JST to visualize the IdP ```status``` page:
+3. Import the JST libraries to visualize the IdP ```status``` page:
   * ```cd /opt/shibboleth-idp/edit-webapp/WEB-INF/lib```
   * ```wget https://build.shibboleth.net/nexus/service/local/repositories/thirdparty/content/javax/servlet/jstl/1.2/jstl-1.2.jar```
   * ```cd /opt/shibboleth-idp/bin ; ./build.sh -Didp.target.dir=/opt/shibboleth-idp```
 
 4. Change the rights to enable tomcat8 user to access on the following directories:
-  * ```chown -R tomcat8/opt/shibboleth-idp/logs/```
+  * ```chown -R tomcat8 /opt/shibboleth-idp/logs/```
   * ```chown -R tomcat8 /opt/shibboleth-idp/metadata/```
   * ```chown -R tomcat8 /opt/shibboleth-idp/credentials/```
   * ```chown -R tomcat8 /opt/shibboleth-idp/conf/```
