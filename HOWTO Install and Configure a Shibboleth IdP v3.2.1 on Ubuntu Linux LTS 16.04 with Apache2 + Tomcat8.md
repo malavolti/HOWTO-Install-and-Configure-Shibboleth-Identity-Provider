@@ -27,6 +27,7 @@
 
  * ca-certificates
  * ntp
+ * vim
  * default-jdk 
  * tomcat8
  * apache2
