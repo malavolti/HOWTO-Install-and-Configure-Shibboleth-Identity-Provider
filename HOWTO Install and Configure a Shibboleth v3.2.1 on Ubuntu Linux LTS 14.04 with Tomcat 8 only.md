@@ -195,7 +195,7 @@
 
 2. Download the Shibboleth Identity Provider v3.2.1 package into ```/usr/local/src``` directory:
   * ```cd /usr/local/src```
-  * ```wget https://shibboleth.net/downloads/identityprovider/latest/shibboleth-identity-provider-3.2.1.tar.gz```
+  * ```wget http://shibboleth.net/downloads/identity-provider/latest/shibboleth-identity-provider-3.2.1.tar.gz```
   * ```tar -xzvf shibboleth-identity-provider-3.2.1.tar.gz```
   * ```cd shibboleth-identity-provider-3.2.1```
 
