@@ -327,7 +327,9 @@
     ...
     idp.persistentId.generator = shibboleth.StoredPersistentIdGenerator
     ...
-    idp.persistentId.store = MyPersistentIdStore
+    idp.persistentId.dataSource = MyDataSource
+    ...
+    idp.persistentId.computed = shibboleth.ComputedPersistentIdGenerator
     ```
 
   * Enable the **SAML2PersistentGenerator**:
@@ -336,28 +338,6 @@
 
         ```xml
         <ref bean="shibboleth.SAML2PersistentGenerator" />
-        ```
-
-      * Add to the head, after the first comment, this code (adapted with your DB credentials)
-
-        ```xml
-        <!-- A DataSource bean suitable for use in the idp.persistentId.dataSource property. -->
-        <bean id="MyDataSource" class="org.apache.commons.dbcp2.BasicDataSource"
-              p:driverClassName="com.mysql.jdbc.Driver"
-              p:url="jdbc:mysql://localhost:3306/shibboleth?autoReconnect=true"
-              p:username="##USER_DB##"
-              p:password="##PASSWORD##"
-              p:maxIdle="5"
-              p:maxWaitMillis="15000"
-              p:testOnBorrow="true"
-              p:validationQuery="select 1"
-              p:validationQueryTimeout="5" />
-
-        <!-- A "store" bean suitable for use in the idp.persistentId.store property.-->
-        <bean id="MyPersistentIdStore" parent="shibboleth.JDBCPersistentIdStore"
-              p:dataSource-ref="MyDataSource"
-              p:queryTimeout="PT2S"
-              p:retryableErrors="#{{'23000'}}" />
         ```
 
       * ```vim /opt/shibboleth-idp/conf/c14n/subject-c14n.xml```
@@ -388,6 +368,19 @@
   * ```vim /opt/shibboleth-idp/conf/global.xml``` and add to the tail of the file this piece code:
 
     ```xml
+    <!-- A DataSource bean suitable for use in the idp.persistentId.dataSource property. -->
+    <bean id="MyDataSource" class="org.apache.commons.dbcp.BasicDataSource"
+          p:driverClassName="com.mysql.jdbc.Driver"
+          p:url="jdbc:mysql://localhost:3306/shibboleth?autoReconnect=true"
+          p:username="##USER_DB##"
+          p:password="##PASSWORD##"
+          p:maxActive="10"
+          p:maxIdle="5"
+          p:maxWait="15000"
+          p:testOnBorrow="true"
+          p:validationQuery="select 1"
+          p:validationQueryTimeout="5" />
+
     <bean id="shibboleth.JPAStorageService" class="org.opensaml.storage.impl.JPAStorageService"
           p:cleanupInterval="%{idp.storage.cleanupInterval:PT10M}"
           c:factory-ref="shibboleth.JPAStorageService.entityManagerFactory"/>
@@ -395,7 +388,7 @@
     <bean id="shibboleth.JPAStorageService.entityManagerFactory"
           class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
           <property name="packagesToScan" value="org.opensaml.storage.impl"/>
-          <property name="dataSource" ref="shibboleth.JPAStorageService.DataSource"/>
+          <property name="dataSource" ref="MyDataSource"/>
           <property name="jpaVendorAdapter" ref="shibboleth.JPAStorageService.JPAVendorAdapter"/>
           <property name="jpaDialect">
             <bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
@@ -405,16 +398,6 @@
     <bean id="shibboleth.JPAStorageService.JPAVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
             <property name="database" value="MYSQL" />
     </bean>
-
-    <bean id="shibboleth.JPAStorageService.DataSource"
-          class="org.apache.tomcat.jdbc.pool.DataSource" 
-          destroy-method="close" 
-          lazy-init="true" 
-          p:driverClassName="com.mysql.jdbc.Driver" 
-          p:url="jdbc:mysql://localhost:3306/shibboleth?autoReconnect=true&amp;sessionVariables=wait_timeout=31536000"
-          p:validationQuery="SELECT 1;"
-          p:username="##USER_DB_NAME##"
-          p:password="##PASSWORD##" />
     ```
     (and modify the "**USER_DB_NAME**" and "**PASSWORD**" of the "**shibboleth**" DB)
 
@@ -494,12 +477,12 @@
       -->
       </resolver:DataConnector>
       ```
-------------------------------------------------------------------------------------------------------------------
-**UTILITY FOR OPENLDAP ADMINISTRATOR:**
-  * ldapsearch -H ldap:// -x -b "dc=example,dc=it" -LLL dn
-    * the baseDN ==> ou=people, dc=example,dc=it (branch containing the registered users)
-    * the bindDN ==> cn=admin,dc=example,dc=it (distinguished name for the user that can made queries on the LDAP)
-------------------------------------------------------------------------------------------------------------------
+
+      **UTILITY FOR OPENLDAP ADMINISTRATOR:**
+        * ldapsearch -H ldap:// -x -b "dc=example,dc=it" -LLL dn
+          * the baseDN ==> ou=people, dc=example,dc=it (branch containing the registered users)
+          * the bindDN ==> cn=admin,dc=example,dc=it (distinguished name for the user that can made queries on the LDAP)
+
 
 10. Enrich IDP logs with the authentication error occurred on LDAP
   * ```vim /opt/shibboleth/conf/logback```
