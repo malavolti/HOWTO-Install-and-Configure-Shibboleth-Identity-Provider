@@ -479,9 +479,9 @@
       ```
 
       **UTILITY FOR OPENLDAP ADMINISTRATOR:**
-        * ldapsearch -H ldap:// -x -b "dc=example,dc=it" -LLL dn
-          * the baseDN ==> ou=people, dc=example,dc=it (branch containing the registered users)
-          * the bindDN ==> cn=admin,dc=example,dc=it (distinguished name for the user that can made queries on the LDAP)
+        * ```ldapsearch -H ldap:// -x -b "dc=example,dc=it" -LLL dn```
+          * the baseDN ==> ```ou=people, dc=example,dc=it``` (branch containing the registered users)
+          * the bindDN ==> ```cn=admin,dc=example,dc=it``` (distinguished name for the user that can made queries on the LDAP)
 
 
 10. Enrich IDP logs with the authentication error occurred on LDAP
