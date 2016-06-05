@@ -304,249 +304,260 @@
 1. Become ROOT:
   * ```sudo su -```
 
-2. Install a MySQL Database package and some useful libraries for Tomcat and Shibboleth:
-    * MySQL DB: 
-      * ```apt-get istall mysql-server```
+2. Install **MySQL Connector Java** and **Tomcat JDBC** libraries used by Tomcat and Shibboleth for MySQL DB:
+  * ```apt-get istall mysql-server libmysql-java```
+  * ```cp /usr/share/java/mysql-connector-java.jar /opt/shibboleth-idp/editwebapp/WEB-INF/lib/```
+  * ```cp /usr/share/java/mysql-connector-java.jar /usr/share/tomcat8/lib/```
+  * ```cp /usr/share/tomcat8/lib/tomcat-jdbc.jar /opt/shibboleth-idp/editwebapp/WEB-INF/lib/```
 
-    * MySQL Connector Java [[1]](https://dev.mysql.com/downloads/connector/j/):
-      * ```cd /usr/local/src/```
-      * ```wget -O mysql-connector-java-5.1.38.tar.gz http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.38.tar.gz/from/http://cdn.mysql.com/```
-      * ```tar -xzvf mysql-connector-java-5.1.38.tar.gz```
-      * ```cd /usr/local/src/mysqlconnector-java-5.1.38/```
-      * ```cp mysql-connector-java-5.1.38-bin.jar /opt/shibboleth-idp/editwebapp/WEB-INF/lib```
-      * ```cp mysql-connector-java-5.1.38-bin.jar /opt/tomcat/lib```
-      * ```cp /opt/tomcat/lib/tomcat-jdbc.jar /opt/shibboleth-idp/edit-webapp/WEBINF/lib```
+3. Install the libraries **Common DBCP2**[[2]](http://commons.apache.org/proper/commons-dbcp/) used for generation of saml-id:
+  * ```cd /usr/local/src/```
+  * ```wget http://mirrors.muzzy.it/apache//commons/dbcp/binaries/commonsdbcp2-2.1.1-bin.tar.gz```
+  * ```tar xzvf commons-dbcp2-2.1.1-bin.tar.gz ; cd commons-dbcp2-2.1.1/```
+  * ```cp commons-dbcp2-2.1.1.jar /opt/shibboleth-idp/edit-webapp/WEBINF/lib/```
+  
+4. Install the libraries **Tomcat Common Pool**[[3]](http://commons.apache.org/proper/commons-pool/download_pool.cgi) used for the generation of saml-id:
+  * ```cd /usr/local/src/```
+  * ```wget http://mirror.nohup.it/apache//commons/pool/binaries/commonspool2-2.4.2-bin.tar.gz```
+  * ```tar xzvf commons-pool2-2.4.2-bin.tar.gz ; cd commons-pool2-2.4.2/```
+  * ```cp commons-pool2-2.4.2.jar /opt/shibboleth-idp/edit-webapp/WEBINF/lib/```
 
-    * Common DBCP [[2]](http://commons.apache.org/proper/commons-dbcp/):
-      * ```cd /usr/local/src/```
-      * ```wget http://mirrors.muzzy.it/apache//commons/dbcp/binaries/commons-dbcp2-2.1.1-bin.tar.gz```
-      * ```tar xzvf commons-dbcp2-2.1.1-bin.tar.gz```
-      * ```cd commons-dbcp2-2.1.1/```
-      * ```cp commons-dbcp2-2.1.1.jar /opt/shibboleth-idp/edit-webapp/WEB-INF/lib/```
+5. Rebuild the **idp.war** of Shibboleth with the new libraries:
+  * ```cd /opt/shibboleth-idp/ ; ./bin/build.sh```
 
-    * Tomcat Common Pool [[3]](http://commons.apache.org/proper/commons-pool/download_pool.cgi):
-      * ```cd /usr/local/src/```
-      * ```wget http://mirror.nohup.it/apache//commons/pool/binaries/commons-pool2-2.4.2-bin.tar.gz```
-      * ```tar xzvf commons-pool2-2.4.2-bin.tar.gz ; cd commons-pool2-2.4.2/```
-      * ```cp commons-pool2-2.4.2.jar /opt/shibboleth-idp/edit-webapp/WEB-INF/lib/```
+6. Create and prepare the "**shibboleth**" MySQL DB to host the values of the several **persistent-id** and **StorageRecords** to host other useful information about user consent:
+  *  ```cd /usr/local/src/HOWTO-Shib-IdP```
+  *  Modify the [shibboleth-db.sql](../master/shibboleth-db.sql) by changing the *username* and *password* of the user that has access to the "**shibboleth**" DB.
+  *  ```mysql -u root -p##PASSWORD-DB## < ./shibboleth-db.sql```
+  *  ```service mysql restart```
 
-   * HikariCP [[4]](http://search.maven.org/#search%7Cga%7C1%7CHikariCP):
-      * ```cd /usr/local/src/```
-      * ```wget http://search.maven.org/remotecontent?filepath=com/zaxxer/HikariCP/2.4.5/HikariCP-2.4.5.jar -O HikariCP-2.4.5.jar```
-      * ```cp HikariCP-2.4.5.jar /opt/shibboleth-idp/edit-webapp/WEB-INF/lib/```
-      * ```cd /opt/shibboleth-idp/ ; ./bin/build.sh```
+7. Enable the generation of the ```persistent-id``` (this replace the deprecated attribute *eduPersonTargetedID*)
+  * ```vim /opt/shibboleth-idp/conf/saml-nameid.properties```
+    (the *sourceAttribute* MUST BE an attribute, or a list of comma-separated attributes, that uniquely identify the subject of the generated ```persistent-id```. It MUST BE: **Stable**, **Permanent** and **Not-reassignable**)
 
-3. Create and prepare the "**shibboleth**" DB to host the values of the several **persistent-id** and other useful information about users consent:
-      *  ```cd /usr/local/src/HOWTO-Shib-IdP```
-      *  Modify the "**shibboleth-idp.sql**" by changing the username and password of the user that has access to the "**shibboleth**" DB.
-      *  ```mysql -u root -p##PASSWORD-DB## < ./shibboleth-db.sql```
-      *  ```service mysql restart```
+    ```xml
+    idp.persistentId.sourceAttribute = uid
+    ...
+    idp.persistentId.salt = ### result of 'openssl rand -base64 36'###
+    ...
+    idp.persistentId.generator = shibboleth.StoredPersistentIdGenerator
+    ...
+    idp.persistentId.dataSource = MyDataSource
+    ...
+    idp.persistentId.computed = shibboleth.ComputedPersistentIdGenerator
+    ```
 
-4. Enable the generation of the ```persistent-id``` (this replace the deprecated attribute "eduPersonTargetedID")
-    * ```vim /opt/shibboleth-idp/conf/saml-nameid.properties```
-      (the *sourceAttribute* MUST BE an attribute, or a list of comma-separated attributes, that uniquely identify the subject of the generated ```persistent-id```. It MUST BE: **Stable**, **Permanent** and **Not-reassignable**)
+  * Enable the **SAML2PersistentGenerator**:
+    * ```vim /opt/shibboleth-idp/conf/saml-nameid.xml```
+      * Remove the comment from the line containing:
 
-      ```xml
-      idp.persistentId.sourceAttribute = uid
-      ...
-      idp.persistentId.salt = ### result of 'openssl rand -base64 36'###
-      ...
-      idp.persistentId.generator = shibboleth.StoredPersistentIdGenerator
-      ...
-      idp.persistentId.store = MyPersistentIdStore
-      ```
-    * Enable the SAML2PersistentGenerator:
-       * ```vim /opt/shibboleth-idp/conf/saml-nameid.xml```
-          * Remove the comment from the line containing:
-            ```
-            <ref bean="shibboleth.SAML2PersistentGenerator" />
-            ```
-          * Add to the head, after the first comment, this code (adapted with your DB credentials)
+        ```xml
+        <ref bean="shibboleth.SAML2PersistentGenerator" />
+        ```
+
+      * ```vim /opt/shibboleth-idp/conf/c14n/subject-c14n.xml```
+        * Remove the comment to the bean called "**c14n/SAML2Persistent**".
+
+        * Modify the ***DefaultRelyingParty*** to releasing of the "persistent-id" to all, ever:
+          * ```vim /opt/shibboleth-idp/conf/relying-party.xml```
 
             ```xml
-            <!-- A DataSource bean suitable for use in the idp.persistentId.dataSource property. -->
-            <bean id="MyDataSource" class="org.apache.commons.dbcp2.BasicDataSource"
-                  p:driverClassName="com.mysql.jdbc.Driver"
-                  p:url="jdbc:mysql://localhost:3306/shibboleth?autoReconnect=true"
-                  p:username="##USER_DB##"
-                  p:password="##PASSWORD##"
-                  p:maxIdle="5"
-                  p:maxWaitMillis="15000"
-                  p:testOnBorrow="true"
-                  p:validationQuery="select 1"
-                  p:validationQueryTimeout="5" />
-     
-            <!-- A "store" bean suitable for use in the idp.persistentId.store property.-->
-            <bean id="MyPersistentIdStore" parent="shibboleth.JDBCPersistentIdStore"
-                  p:dataSource-ref="MyDataSource"
-                  p:queryTimeout="PT2S"
-                  p:retryableErrors="#{{'23000'}}" />
+            <bean id="shibboleth.DefaultRelyingParty" parent="RelyingParty">
+                <property name="profileConfigurations">
+                  <list>
+                      <bean parent="Shibboleth.SSO" p:postAuthenticationFlows="attributerelease" />
+                      <ref bean="SAML1.AttributeQuery" />
+                      <ref bean="SAML1.ArtifactResolution" />
+                      <bean parent="SAML2.SSO" p:postAuthenticationFlows="attribute-release" p:nameIDFormatPrecedence="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent" />
+                      <ref bean="SAML2.ECP" />
+                      <ref bean="SAML2.Logout" />
+                      <ref bean="SAML2.AttributeQuery" />
+                      <ref bean="SAML2.ArtifactResolution" />
+                      <ref bean="Liberty.SSOS" />
+                  </list>
+                </property>
+            </bean>
             ```
 
-         * ```vim /opt/shibboleth-idp/conf/c14n/subject-c14n.xml```
-            * Remove the comment to the bean called "**c14n/SAML2Persistent**".
+8. Enable **JPAStorageService** for the **StorageService** of the user consent:
+  * ```vim /opt/shibboleth-idp/conf/global.xml``` and add to the tail of the file this piece code:
 
-         * Modify the ***DefaultRelyingParty*** to releasing of the "persistent-id" to all, ever:
-            * ```vim /opt/shibboleth-idp/conf/relying-party.xml```
-            
-              ```xml
-              <bean id="shibboleth.DefaultRelyingParty" parent="RelyingParty">
-                 <property name="profileConfigurations">
-                    <list>
-                       <bean parent="Shibboleth.SSO" p:postAuthenticationFlows="attributerelease" />
-                       <ref bean="SAML1.AttributeQuery" />
-                       <ref bean="SAML1.ArtifactResolution" />
-                       <bean parent="SAML2.SSO" p:postAuthenticationFlows="attribute-release" p:nameIDFormatPrecedence="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent" />
-                       <ref bean="SAML2.ECP" />
-                       <ref bean="SAML2.Logout" />
-                       <ref bean="SAML2.AttributeQuery" />
-                       <ref bean="SAML2.ArtifactResolution" />
-                       <ref bean="Liberty.SSOS" />
-                    </list>
-                 </property>
-              </bean>
-              ```
+    ```xml
+    <!-- A DataSource bean suitable for use in the idp.persistentId.dataSource property. -->
+    <bean id="MyDataSource" class="org.apache.commons.dbcp.BasicDataSource"
+          p:driverClassName="com.mysql.jdbc.Driver"
+          p:url="jdbc:mysql://localhost:3306/shibboleth?autoReconnect=true"
+          p:username="##USER_DB##"
+          p:password="##PASSWORD##"
+          p:maxActive="10"
+          p:maxIdle="5"
+          p:maxWait="15000"
+          p:testOnBorrow="true"
+          p:validationQuery="select 1"
+          p:validationQueryTimeout="5" />
 
+    <bean id="shibboleth.JPAStorageService" class="org.opensaml.storage.impl.JPAStorageService"
+          p:cleanupInterval="%{idp.storage.cleanupInterval:PT10M}"
+          c:factory-ref="shibboleth.JPAStorageService.entityManagerFactory"/>
 
-5. Enable JPAStorageService for the StorageService of the user consent:
-    * ```vim /opt/shibboleth-idp/conf/global.xml``` and add to the tail of the file this code:
+    <bean id="shibboleth.JPAStorageService.entityManagerFactory"
+          class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+          <property name="packagesToScan" value="org.opensaml.storage.impl"/>
+          <property name="dataSource" ref="MyDataSource"/>
+          <property name="jpaVendorAdapter" ref="shibboleth.JPAStorageService.JPAVendorAdapter"/>
+          <property name="jpaDialect">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
+          </property>
+    </bean>
+
+    <bean id="shibboleth.JPAStorageService.JPAVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+            <property name="database" value="MYSQL" />
+    </bean>
+    ```
+    (and modify the "**USER_DB_NAME**" and "**PASSWORD**" of the "**shibboleth**" DB)
+
+  * Modify the IdP configuration file:
+    * ```vim /opt/shibboleth-idp/conf/idp.properties```
+
       ```xml
-      <bean id="shibboleth.JPAStorageService" class="org.opensaml.storage.impl.JPAStorageService"
-             p:cleanupInterval="%{idp.storage.cleanupInterval:PT10M}"
-             c:factory-ref="shibboleth.JPAStorageService.entityManagerFactory"/>
-             
-      <bean id="shibboleth.JPAStorageService.entityManagerFactory"
-             class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
-             <property name="packagesToScan" value="org.opensaml.storage.impl"/>
-             <property name="dataSource" ref="shibboleth.JPAStorageService.DataSource"/>
-             <property name="jpaVendorAdapter" ref="shibboleth.JPAStorageService.JPAVendorAdapter"/>
-             <property name="jpaDialect">
-                 <bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
-             </property>
-      </bean>
-      
-      <bean id="shibboleth.JPAStorageService.JPAVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
-             <property name="database" value="MYSQL" />
-      </bean>
-      
-      <bean id="shibboleth.JPAStorageService.DataSource"
-                class="org.apache.tomcat.jdbc.pool.DataSource" 
-                destroy-method="close" 
-                lazy-init="true" 
-                p:driverClassName="com.mysql.jdbc.Driver" 
-                p:url="jdbc:mysql://localhost:3306/shibboleth?autoReconnect=true&amp;sessionVariables=wait_timeout=31536000"
-                p:validationQuery="SELECT 1;"
-                p:username="##USER_DB##"
-                p:password="##PASSWORD##" />
-       ```
-       (and modify the "**username**" and "**password**" of the "**shibboleth**" DB)
+      idp.session.StorageService = shibboleth.JPAStorageService
+      idp.consent.StorageService = shibboleth.JPAStorageService
+      idp.replayCache.StorageService = shibboleth.JPAStorageService
+      idp.artifact.StorageService = shibboleth.JPAStorageService
+      ```
+  
+      (This will say to IdP to store the data collected by User Consent into the "**StorageRecords**" table)
 
-    * Modify the IdP configuration file:
-        * ```vim /opt/shibboleth-idp/conf/idp.properties```
+9. Connect the openLDAP to the IdP to allow the authentication of the users:
+  * ```vim /opt/shibboleth-idp/conf/ldap.properties```
 
-          ```xml
-          idp.session.StorageService = shibboleth.JPAStorageService
-          idp.consent.StorageService = shibboleth.JPAStorageService
-          idp.replayCache.StorageService = shibboleth.JPAStorageService
-          idp.artifact.StorageService = shibboleth.JPAStorageService
-          ```
-          (This will say to IdP to store the data collected by User Consent into the "**StorageRecords**" table)
+    (with ***TLS** solutions we consider to have the LDAP certificate into ```/opt/shibboleth-idp/credentials```).
 
-6. Connect the openLDAP to the IdP to permit the authentication of the users:
-  *  ```vim /opt/shibboleth-idp/conf/ldap.properties```
-     (with ***TLS** solutions we consider to have the LDAP certificate into ```/opt/shibboleth-idp/credentials```). To find out values like baseDN or bindDN you can use commands like:
+    *  Solution 1: LDAP + STARTTLS:
 
-    * ```ldapsearch -H ldap:// -x -b "dc=example,dc=it" -LLL dn```
-      * baseDN ==> ```ou=people,dc=example,dc=it``` (branch that contains the users)
-      * bindDN ==> ```cn=admin,dc=example,dc=it``` (LDAP's user that can perform queries)
-
-    *  Solution with LDAP + STARTTLS:
-    
-          ```xml
-          idp.authn.LDAP.authenticator = bindSearchAuthenticator
-          idp.authn.LDAP.ldapURL = ldap://ldap.example.garr.it:389
-          idp.authn.LDAP.useStartTLS = true
-          idp.authn.LDAP.useSSL = false
-          idp.authn.LDAP.sslConfig = certificateTrust
-          idp.authn.LDAP.trustCertificates = %{idp.home}/credentials/ldap-server.crt
-          idp.authn.LDAP.baseDN = ou=people,dc=example,dc=garr,dc=it
-          idp.authn.LDAP.userFilter = (uid={user})
-          idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=garr,dc=it
-          idp.authn.LDAP.bindDNCredential = ###LDAP ADMIN PASSWORD###
-          ```
-    * Solution LDAP + TLS:
-    
-          ```xml
-          idp.authn.LDAP.authenticator = bindSearchAuthenticator
-          idp.authn.LDAP.ldapURL = ldaps://ldap.example.garr.it:636
-          idp.authn.LDAP.useStartTLS = false
-          idp.authn.LDAP.useSSL = true
-          idp.authn.LDAP.sslConfig = certificateTrust
-          idp.authn.LDAP.trustCertificates = %{idp.home}/credentials/ldap-server.crt
-          idp.authn.LDAP.baseDN = ou=people,dc=example,dc=garr,dc=it
-          idp.authn.LDAP.userFilter = (uid={user})
-          idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=garr,dc=it
-          idp.authn.LDAP.bindDNCredential = ###LDAP ADMIN PASSWORD###
-          ```
-    * Solution with a plain LDAP
-    
-          ```xml
-          idp.authn.LDAP.authenticator = bindSearchAuthenticator
-          idp.authn.LDAP.ldapURL = ldap://ldap.example.garr.it:389
-          idp.authn.LDAP.useStartTLS = false
-          idp.authn.LDAP.useSSL = false
-          idp.authn.LDAP.baseDN = ou=people,dc=example,dc=garr,dc=it
-          idp.authn.LDAP.userFilter = (uid={user})
-          idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=garr,dc=it
-          idp.authn.LDAP.bindDNCredential = ###LDAP ADMIN PASSWORD###
-          ```
-
-7. Enrich IDP logs with the authentication error occurred on LDAP
-    *  ```vim /opt/shibboleth/conf/logback```
-
-       ```xml
-       <!-- Logs LDAP related messages -->
-       <logger name="org.ldaptive" level="${idp.loglevel.ldap:-WARN}"/>
-       
-       <!-- Logs on LDAP user authentication -->
-       <logger name="org.ldaptive.auth.Authenticator" level="INFO" />
-       ```
-8. Build the **attribute-resolver.xml** to define which attributes your IdP can release *(a Federation may distribute an attribute resolver compliant with its reccomendations, here we will give a basic configuration only)*:
-    *  ```vim /opt/shibboleth/conf/services.xml```
-
-       ```xml
-       <value>%{idp.home}/conf/attribute-resolver.xml</value>
-       
-       must become:
-       
-       <value>%{idp.home}/conf/attribute-resolver-full.xml</value>
-       ```
-
-    *  ```vim /opt/shibboleth-idp/conf/attribute-resolver-full.xml```
-       * Remove comment from "**Schema: Core Schema attributes**"
-       * Remove comment from "**Schema: InetOrgPerson attributes**"
-       * Remove comment from "**Schema: eduPerson attributes**"
-   
-       (Obviously, this schemas are the default ones, but for new attributes, your LDAP could need some new schemas)
-       * Remove the comment from the LDAP Data Connector configured previously on ```ldap.properties```
-
-9. Translate your IdP in your language:
-       * Get the files translated in your language from [Shibboleth page](https://wiki.shibboleth.net/confluence/display/IDP30/MessagesTranslation) for:
-          * **login page** (authn-messages_it.properties)
-          * **user consent/terms of use page** (consent-messages_it.properties)
-          * **error pages** (error-messages_it.properties)
-      
-       * Put all the downloded files into ```/opt/shibboleth-idp/messages``` directory
-       * Restart Tomcat by: ```service tomcat restart```
-
-10. Register your IdP on your federation with the metadata found on:
-    *  ```https://##idp.example.it##/idp/shibboleth```
-
-11. Configure the IdP to retrieve the Federation Metadata
-  *  ```cd /opt/shibboleth-idp/conf```
-  *  ```vim metadata-providers.xml```
       ```xml
-      <MetadataProvider
+      idp.authn.LDAP.authenticator = bindSearchAuthenticator
+      idp.authn.LDAP.ldapURL = ldap://ldap.example.it:389
+      idp.authn.LDAP.useStartTLS = true
+      idp.authn.LDAP.useSSL = false
+      idp.authn.LDAP.sslConfig = certificateTrust
+      idp.authn.LDAP.trustCertificates = %{idp.home}/credentials/ldap-server.crt
+      idp.authn.LDAP.baseDN = ou=people,dc=example,dc=it
+      idp.authn.LDAP.userFilter = (uid={user})
+      idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=it
+      idp.authn.LDAP.bindDNCredential = ###LDAP ADMIN PASSWORD###
+      ```
+
+    * Solution 2: LDAP + TLS:
+
+      ```xml
+      idp.authn.LDAP.authenticator = bindSearchAuthenticator
+      idp.authn.LDAP.ldapURL = ldaps://ldap.example.it:636
+      idp.authn.LDAP.useStartTLS = false
+      idp.authn.LDAP.useSSL = true
+      idp.authn.LDAP.sslConfig = certificateTrust
+      idp.authn.LDAP.trustCertificates = %{idp.home}/credentials/ldap-server.crt
+      idp.authn.LDAP.baseDN = ou=people,dc=example,dc=it
+      idp.authn.LDAP.userFilter = (uid={user})
+      idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=it
+      idp.authn.LDAP.bindDNCredential = ###LDAP ADMIN PASSWORD###
+      ```
+
+    * Solution 3: plain LDAP
+  
+      ```xml
+      idp.authn.LDAP.authenticator = bindSearchAuthenticator
+      idp.authn.LDAP.ldapURL = ldap://ldap.example.it:389
+      idp.authn.LDAP.useStartTLS = false
+      idp.authn.LDAP.useSSL = false
+      idp.authn.LDAP.baseDN = ou=people,dc=example,dc=it
+      idp.authn.LDAP.userFilter = (uid={user})
+      idp.authn.LDAP.bindDN = cn=admin,dc=example,dc=it
+      idp.authn.LDAP.bindDNCredential = ###LDAP ADMIN PASSWORD###
+      ```
+      (If you decide to use the Solution 3, you have to remove the following code from your ```attribute-resolver-full.xml```:
+      
+      ```xml
+      </dc:FilterTemplate>
+      <!--
+      <dc:StartTLSTrustCredential id="LDAPtoIdPCredential" xsi:type="sec:X509ResourceBacked">
+        <sec:Certificate>%
+          {idp.attribute.resolver.LDAP.trustCertificates}</sec:Certificate>
+        </dc:StartTLSTrustCredential>
+      -->
+      </resolver:DataConnector>
+      ```
+
+      **UTILITY FOR OPENLDAP ADMINISTRATOR:**
+        * ```ldapsearch -H ldap:// -x -b "dc=example,dc=it" -LLL dn```
+          * the baseDN ==> ```ou=people, dc=example,dc=it``` (branch containing the registered users)
+          * the bindDN ==> ```cn=admin,dc=example,dc=it``` (distinguished name for the user that can made queries on the LDAP)
+
+10. Enrich IDP logs with the authentication error occurred on LDAP
+  * ```vim /opt/shibboleth/conf/logback```
+
+    ```xml
+    <!-- Logs LDAP related messages -->
+    <logger name="org.ldaptive" level="${idp.loglevel.ldap:-WARN}"/>
+ 
+    <!-- Logs on LDAP user authentication -->
+    <logger name="org.ldaptive.auth.Authenticator" level="INFO" />
+    ```
+
+11. Build the **attribute-resolver.xml** to define which attributes your IdP can release *(a Federation may distribute an attribute resolver compliant with its reccomendations, here we will give a basic configuration only)*:
+  * ```vim /opt/shibboleth/conf/services.xml```
+
+    ```xml
+    <value>%{idp.home}/conf/attribute-resolver.xml</value>
+ 
+    must become:
+ 
+    <value>%{idp.home}/conf/attribute-resolver-full.xml</value>
+    ```
+
+  *  ```vim /opt/shibboleth-idp/conf/attribute-resolver-full.xml```
+    * Remove comment from "**Schema: Core Schema attributes**"
+    * Remove comment from "**Schema: InetOrgPerson attributes**"
+    * Remove comment from "**Schema: eduPerson attributes**"
+
+    (Obviously, this schemas are the default ones, but for new attributes, your LDAP could need some new schemas)
+    
+    * Remove the comment from the LDAP Data Connector configured previously on ```ldap.properties```
+
+12. Translate the IdP messages in your language:
+  * Get the files translated in your language from [Shibboleth page](https://wiki.shibboleth.net/confluence/display/IDP30/MessagesTranslation) for:
+    * **login page** (authn-messages_it.properties)
+    * **user consent/terms of use page** (consent-messages_it.properties)
+    * **error pages** (error-messages_it.properties)
+  
+  * Put all the downloded files into ```/opt/shibboleth-idp/messages``` directory
+    * Restart Tomcat by: ```service tomcat restart```
+
+13. Enable the SAML2 support by changing the ```idp-metadata.xml``` and disabling the SAML v1.x deprecated support:
+  * ```vim /opt/shibboleth-idp/metadata.xml```
+    ```bash
+    STRINGS TO REMOVE:
+      – urn:oasis:names:tc:SAML:1.1:protocol
+      – urn:mace:shibboleth:1.0
+      – Entire endpoint with Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAPbinding" (and change the index in the right way)
+      – <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
+      – Entire endpoint with Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" (and change the index in the right way)
+      – 8443 (everywhere, because we don't use it)
+      
+    IN THE ATTRIBUTE-AUTHORITY SECTION:
+    – Replace "urn:oasis:names:tc:SAML:1.1:protocol" with "urn:oasis:names:tc:SAML:2.0:protocol"
+    - Remove the comment from the AttributeService SAML2 and comment out the SAMLv1 one.
+    ```
+
+14. Register your IdP on your federation with the metadata found on:
+  *  ```https://##idp.example.it##/idp/shibboleth```
+
+15. Configure the IdP to retrieve the Federation Metadata:
+  * ```cd /opt/shibboleth-idp/conf```
+  * ```vim metadata-providers.xml```
+
+    ```xml
+    <MetadataProvider
           id="URLMD-Federation"
           xsi:type="FileBackedHTTPMetadataProvider"
           backingFile="%{idp.home}/federation-test-metadata-sha256.xml"
@@ -567,8 +578,8 @@
           <MetadataFilter xsi:type="EntityRoleWhiteList">
             <RetainedRole>md:SPSSODescriptor</RetainedRole>
           </MetadataFilter>
-      </MetadataProvider>
-      ```
+    </MetadataProvider>
+    ```
 
   * Retrive the Federation Certificate used to verify its signed metadata:
     *  ```wget https://www.exampleFed.it/certificate/federation-cert.pem -O /opt/shibboleth-idp/metadata/federation-cert.pem```
@@ -578,8 +589,9 @@
     *  ```openssl x509 -in federation-cert.pem -fingerprint -sha1 -noout```
     *  ```openssl x509 -in federation-cert.pem -fingerprint -md5 -noout```
   
-11. Restart Tomcat to retrieve the Federation Metadata
-    *  ```service tomcat8 restart```
+15. Reload service with id ```shibboleth.MetadataResolverService``` to retrieve the Federation Metadata:
+  *  ```cd /opt/shibboleth-idp/bin```
+  *  ```./reload-service.sh -id shibboleth.MetadataResolverService```
 
 ### Configure Attribute Filter for Research and Scholarship Entity Category
 
