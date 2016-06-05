@@ -295,13 +295,13 @@
   * ```cp /usr/share/java/mysql-connector-java.jar /usr/share/tomcat8/lib/```
   * ```cp /usr/share/tomcat8/lib/tomcat-jdbc.jar /opt/shibboleth-idp/editwebapp/WEB-INF/lib/```
 
-3. Install the libraries **Common DBCP2** used for generation of saml-id:
+3. Install the libraries **Common DBCP2**[[2]](http://commons.apache.org/proper/commons-dbcp/) used for generation of saml-id:
   * ```cd /usr/local/src/```
   * ```wget http://mirrors.muzzy.it/apache//commons/dbcp/binaries/commonsdbcp2-2.1.1-bin.tar.gz```
   * ```tar xzvf commons-dbcp2-2.1.1-bin.tar.gz ; cd commons-dbcp2-2.1.1/```
   * ```cp commons-dbcp2-2.1.1.jar /opt/shibboleth-idp/edit-webapp/WEBINF/lib/```
   
-4. Install the libraries **Tomcat Common Pool** used for the generation of saml-id:
+4. Install the libraries **Tomcat Common Pool**[[3]](http://commons.apache.org/proper/commons-pool/download_pool.cgi) used for the generation of saml-id:
   * ```cd /usr/local/src/```
   * ```wget http://mirror.nohup.it/apache//commons/pool/binaries/commonspool2-2.4.2-bin.tar.gz```
   * ```tar xzvf commons-pool2-2.4.2-bin.tar.gz ; cd commons-pool2-2.4.2/```
@@ -416,12 +416,7 @@
 9. Connect the openLDAP to the IdP to allow the authentication of the users:
   * ```vim /opt/shibboleth-idp/conf/ldap.properties```
 
-    (with ***TLS** solutions we consider to have the LDAP certificate into ```/opt/shibboleth-idp/credentials```). 
-    To find out values like baseDN or bindDN you can use commands like:
-
-    * ```ldapsearch -H ldap:// -x -b "dc=example,dc=it" -LLL dn```
-      * baseDN ==> ```ou=people,dc=example,dc=it``` (branch that contains the users)
-      * bindDN ==> ```cn=admin,dc=example,dc=it``` (LDAP's user that can perform queries)
+    (with ***TLS** solutions we consider to have the LDAP certificate into ```/opt/shibboleth-idp/credentials```).
 
     *  Solution 1: LDAP + STARTTLS:
 
