@@ -299,9 +299,9 @@
 
 3. Install the libraries **Common DBCP2**[[2]](http://commons.apache.org/proper/commons-dbcp/) used for generation of saml-id:
   * ```cd /usr/local/src/```
-  * ```wget http://mirrors.muzzy.it/apache//commons/dbcp/binaries/commonsdbcp2-2.1.1-bin.tar.gz```
-  * ```tar xzvf commons-dbcp2-2.1.1-bin.tar.gz ; cd commons-dbcp2-2.1.1/```
-  * ```cp commons-dbcp2-2.1.1.jar /opt/shibboleth-idp/edit-webapp/WEBINF/lib/```
+  * ```wget http://www-us.apache.org/dist//commons/dbcp/binaries/commons-dbcp2-2.2.0-bin.tar.gz```
+  * ```tar xzvf commons-dbcp2-2.2.0-bin.tar.gz ; cd commons-dbcp2-2.2.0/```
+  * ```cp commons-dbcp2-2.2.0.jar /opt/shibboleth-idp/edit-webapp/WEBINF/lib/```
   
 4. Install the libraries **Tomcat Common Pool**[[3]](http://commons.apache.org/proper/commons-pool/download_pool.cgi) used for the generation of saml-id:
   * ```cd /usr/local/src/```
