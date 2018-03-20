@@ -254,7 +254,7 @@
     ```
 
 4. Enable **proxy_ajp** apache2 module and the new IdP site:
-  * ```a2enmod proxy_ajp ; a2ensite idp.conf ; service apache2 restart```
+  * ```a2enmod proxy_ajp ; a2ensite idp.conf ; systemctl restart apache2```
   
 5. Modify **context.xml** to prevent error of *lack of persistence of the session objects* created by the IdP :
   * ```vim /etc/tomcat8/context.xml```
@@ -280,7 +280,7 @@
 2. Insert the output list into ```/opt/tomcat/conf/catalina.properties``` at the tail of ```tomcat.util.scan.StandardJarScanFilter.jarsToSkip```
 
 3. Restart Tomcat 8:
-  * ```service tomcat8 restart```
+  * ```systemctl restart tomcat8```
   
 ### Configure Shibboleth Identity Provider v3.3.2 to release the persistent-id (Stored mode)
 
@@ -289,7 +289,7 @@
   
 1. Test IdP by opening a terminal and running these commands:
   * ```cd /opt/shibboleth-idp/bin```
-  * ```./status.sh``` (You shuold see some informations about the IdP installed)
+  * ```./status.sh``` (You should see some informations about the IdP installed)
 
 2. Install **MySQL Connector Java** and **Tomcat JDBC** libraries used by Tomcat and Shibboleth for MySQL DB:
   * ```apt-get istall mysql-server libmysql-java```
@@ -316,7 +316,7 @@
   *  ```cd /usr/local/src/HOWTO-Shib-IdP```
   *  Modify the [shibboleth-db.sql](../master/shibboleth-db.sql) by changing the *username* and *password* of the user that has access to the "**shibboleth**" DB.
   *  ```mysql -u root -p##PASSWORD-DB## < ./shibboleth-db.sql```
-  *  ```service mysql restart```
+  *  ```systemctl restart mysql```
 
 7. Enable the generation of the ```persistent-id``` (this replace the deprecated attribute *eduPersonTargetedID*)
   * ```vim /opt/shibboleth-idp/conf/saml-nameid.properties```
