@@ -34,7 +34,7 @@
 
 ## Other Requirements
 
- * Place the HTTPS Server Certificate and the HTTTPS Server Key inside ```/tmp``` directory
+ * Place your TLS certificates inside ```/tmp``` directory
 
 ## Installation Instructions
 
