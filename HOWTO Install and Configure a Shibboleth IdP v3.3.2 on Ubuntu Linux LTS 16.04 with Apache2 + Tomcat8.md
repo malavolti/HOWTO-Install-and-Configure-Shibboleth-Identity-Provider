@@ -315,7 +315,7 @@
 6. Create and prepare the "**shibboleth**" MySQL DB to host the values of the several **persistent-id** and **StorageRecords** to host other useful information about user consent:
   *  ```cd /usr/local/src/HOWTO-Shib-IdP```
   *  Modify the [shibboleth-db.sql](../master/shibboleth-db.sql) by changing the *username* and *password* of the user that has access to the "**shibboleth**" DB.
-  *  ```mysql -u root -p##PASSWORD-DB## < ./shibboleth-db.sql```
+  *  ```mysql -u root -p < ./shibboleth-db.sql```
   *  ```systemctl restart mysql```
 
 7. Enable the generation of the ```persistent-id``` (this replace the deprecated attribute *eduPersonTargetedID*)
