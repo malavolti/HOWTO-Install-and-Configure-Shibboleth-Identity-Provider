@@ -112,7 +112,7 @@
   * ```chmod g+r conf/*```
 
 11. Create the init.d service for restarting Tomcat 8:
-  * ```vim /etc/init.d/tomcat``` (and paste the content of the [daemon-tomcat](../blob/master/daemon-tomcat) file)
+  * ```vim /etc/init.d/tomcat``` (and paste the content of the [daemon-tomcat](../master/daemon-tomcat) file)
   * ```cd /usr/local/src```
   * ```chmod 755 /etc/init.d/tomcat```
   * ```update-rc.d tomcat defaults```
