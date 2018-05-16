@@ -1,4 +1,4 @@
-# HOWTO Install and Configure a Shibboleth IdP v3.2.1 on Ubuntu Linux LTS 16.04 with Apache2 + Tomcat8
+# HOWTO Install and Configure a Shibboleth IdP v3.3.2 on Ubuntu Linux LTS 16.04 with Apache2 + Tomcat8
 
 ## Table of Contents
 
@@ -8,12 +8,12 @@
 4. [Installation Instructions](#installation-instructions)
   1. [Install software requirements](#install-software-requirements)
   2. [Configure the environment](#configure-the-environment)
-  3. [Install Shibboleth Identity Provider 3.2.1](#install-shibboleth-identity-provider-v321)
+  3. [Install Shibboleth Identity Provider 3.3.2](#install-shibboleth-identity-provider-v332)
 5. [Configuration Instructions](#configuration-instructions)
   1. [Configure SSL on Apache2 (Tomcat8 front-end)](#configure-ssl-on-apache2-tomcat8-front-end)
   2. [Configure Apache Tomcat 8](#configure-apache-tomcat-8)
   3. [Speed up Tomcat 8 startup](#speed-up-tomcat-8-startup)
-  4. [Configure Shibboleth Identity Provider v3.2.1 to release the persistent-id (Stored Mode)](#configure-shibboleth-identity-provider-v321-to-release-the-persistent-id-stored-mode)
+  4. [Configure Shibboleth Identity Provider v3.3.2 to release the persistent-id (Stored Mode)](#configure-shibboleth-identity-provider-v332-to-release-the-persistent-id-stored-mode)
   5. [Configure Attribute Filter for Research and Scholarship Entity Category](#configure-attribute-filter-for-research-and-scholarship-entity-category)
 
 
@@ -34,7 +34,7 @@
 
 ## Other Requirements
 
- * Place the HTTPS Server Certificate and the HTTTPS Server Key inside ```/tmp``` directory
+ * Place your TLS certificates inside ```/tmp``` directory
 
 ## Installation Instructions
 
@@ -66,21 +66,21 @@
 
     ```bash
     JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre
-    IDP_SRC=/usr/local/src/shibboleth-identity-provider-3.2.1
+    IDP_SRC=/usr/local/src/shibboleth-identity-provider-3.3.2
     ```
   * ```source /etc/environment```
   * ```export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre```
-  * ```export IDP_SRC=/usr/local/src/shibboleth-identity-provider-3.2.1```
+  * ```export IDP_SRC=/usr/local/src/shibboleth-identity-provider-3.3.2```
   
 3. Move the Certificate and the Key file for HTTPS server from ```/tmp/``` to ```/root/certificates```:
   * ```mkdir /root/certificates```
-  * ```mv /tmp/idp-cert-server.crt /root/certificates```
-  * ```mv /tmp/idp-key-server.key /root/certificates```
-  * ```chmod 400 /root/certificates/idp-key-server.key```
-  * ```chmod 644 /root/certificates/idp-cert-server.crt```
+  * ```mv /tmp/idp-cert-server.pem /root/certificates```
+  * ```mv /tmp/idp-key-server.pem /root/certificates```
+  * ```chmod 400 /root/certificates/idp-key-server.pem```
+  * ```chmod 644 /root/certificates/idp-cert-server.pem```
   
   (OPTIONAL) Create a Certificate and a Key self-signed if you don't have the official ones provided by DigiCert:
-  * ```openssl req -x509 -newkey rsa:4096 -keyout /root/certificates/idpkey-server.key -out /root/certificates/idp-cert-server.crt -nodes -days 3650```
+  * ```openssl req -x509 -newkey rsa:4096 -keyout /root/certificates/idpkey-server.pem -out /root/certificates/idp-cert-server.pem -nodes -days 3650```
 
 4. Configure **/etc/default/tomcat8**:
   * ```update-alternatives --config java``` (copy the path without /bin/java)
@@ -97,23 +97,23 @@
     The Memory value depends on the phisical memory installed on the machine. 
     Set the "**Xmx**" (max heap space available to the JVM) at least to **2GB**)
 
-### Install Shibboleth Identity Provider v3.2.1
+### Install Shibboleth Identity Provider v3.3.2
 
 0. Become ROOT of the machine: 
   * ```sudo su -```
 
-1. Download the Shibboleth IdP 3.2.1:
+1. Download the Shibboleth IdP 3.3.2:
   * ```cd /usr/local/src```
-  * ```wget http://shibboleth.net/downloads/identity-provider/latest/shibboleth-identity-provider-3.2.1.tar.gz```
-  * ```tar -xzvf shibboleth-identity-provider-3.2.1.tar.gz```
-  * ```cd shibboleth-identity-provider-3.2.1```
+  * ```wget http://shibboleth.net/downloads/identity-provider/latest/shibboleth-identity-provider-3.3.2.tar.gz```
+  * ```tar -xzvf shibboleth-identity-provider-3.3.2.tar.gz```
+  * ```cd shibboleth-identity-provider-3.3.2```
 
 2. Run the installer ```install.sh```:
   * ```./bin/install.sh```
   
   ```bash
-  root@idp:/usr/local/src/shibboleth-identity-provider-3.2.1# ./bin/install.sh
-  Source (Distribution) Directory: [/usr/local/src/shibboleth-identity-provider-3.2.1]
+  root@idp:/usr/local/src/shibboleth-identity-provider-3.3.2# ./bin/install.sh
+  Source (Distribution) Directory: [/usr/local/src/shibboleth-identity-provider-3.3.2]
   Installation Directory: [/opt/shibboleth-idp]
   Hostname: [localhost.localdomain]
   idp.example.it
@@ -174,7 +174,7 @@
   * ```a2enmod ssl headers```
   * ```a2ensite default-ssl.conf```
   * ```a2dissite 000-default.conf```
-  * ```service apache2 restart```
+  * ```systemctl restart apache2```
 
 3. Configure Apache2 to open port **80** only for localhost:
   * ```vim /etc/apache2/ports.conf```
@@ -254,7 +254,7 @@
     ```
 
 4. Enable **proxy_ajp** apache2 module and the new IdP site:
-  * ```a2enmod proxy_ajp ; a2ensite idp.conf ; service apache2 restart```
+  * ```a2enmod proxy_ajp ; a2ensite idp.conf ; systemctl restart apache2```
   
 5. Modify **context.xml** to prevent error of *lack of persistence of the session objects* created by the IdP :
   * ```vim /etc/tomcat8/context.xml```
@@ -262,8 +262,10 @@
     and remove the comment from:
 
     ```<Manager pathname="" />```
-    
-6. Verify if the IdP works by opening this page on your browser:
+6. Restart **tomcat8** to apply config changes:
+  * ```systemctl restart tomcat8```
+
+7. Verify if the IdP works by opening this page on your browser:
   * ```https://idp.example.it/idp/shibboleth``` (you should see the IdP metadata)
   
 ### Speed up Tomcat 8 startup
@@ -278,34 +280,34 @@
 2. Insert the output list into ```/opt/tomcat/conf/catalina.properties``` at the tail of ```tomcat.util.scan.StandardJarScanFilter.jarsToSkip```
 
 3. Restart Tomcat 8:
-  * ```service tomcat8 restart```
+  * ```systemctl restart tomcat8```
   
-### Configure Shibboleth Identity Provider v3.2.1 to release the persistent-id (Stored mode)
+### Configure Shibboleth Identity Provider v3.3.2 to release the persistent-id (Stored mode)
 
 0. Become ROOT of the machine: 
   * ```sudo su -```
   
 1. Test IdP by opening a terminal and running these commands:
   * ```cd /opt/shibboleth-idp/bin```
-  * ```./status.sh``` (You shuold see some informations about the IdP installed)
+  * ```./status.sh``` (You should see some informations about the IdP installed)
 
 2. Install **MySQL Connector Java** and **Tomcat JDBC** libraries used by Tomcat and Shibboleth for MySQL DB:
-  * ```apt-get istall mysql-server libmysql-java```
+  * ```apt-get install mysql-server libmysql-java```
   * ```cp /usr/share/java/mysql-connector-java.jar /opt/shibboleth-idp/edit-webapp/WEB-INF/lib/```
   * ```cp /usr/share/java/mysql-connector-java.jar /usr/share/tomcat8/lib/```
   * ```cp /usr/share/tomcat8/lib/tomcat-jdbc.jar /opt/shibboleth-idp/edit-webapp/WEB-INF/lib/```
 
 3. Install the libraries **Common DBCP2**[[2]](http://commons.apache.org/proper/commons-dbcp/) used for generation of saml-id:
   * ```cd /usr/local/src/```
-  * ```wget http://mirrors.muzzy.it/apache//commons/dbcp/binaries/commonsdbcp2-2.1.1-bin.tar.gz```
-  * ```tar xzvf commons-dbcp2-2.1.1-bin.tar.gz ; cd commons-dbcp2-2.1.1/```
-  * ```cp commons-dbcp2-2.1.1.jar /opt/shibboleth-idp/edit-webapp/WEBINF/lib/```
+  * ```wget http://www-us.apache.org/dist//commons/dbcp/binaries/commons-dbcp2-2.2.0-bin.tar.gz```
+  * ```tar xzvf commons-dbcp2-2.2.0-bin.tar.gz ; cd commons-dbcp2-2.2.0/```
+  * ```cp commons-dbcp2-2.2.0.jar /opt/shibboleth-idp/edit-webapp/WEB-INF/lib/```
   
 4. Install the libraries **Tomcat Common Pool**[[3]](http://commons.apache.org/proper/commons-pool/download_pool.cgi) used for the generation of saml-id:
   * ```cd /usr/local/src/```
-  * ```wget http://mirror.nohup.it/apache//commons/pool/binaries/commonspool2-2.4.2-bin.tar.gz```
-  * ```tar xzvf commons-pool2-2.4.2-bin.tar.gz ; cd commons-pool2-2.4.2/```
-  * ```cp commons-pool2-2.4.2.jar /opt/shibboleth-idp/edit-webapp/WEBINF/lib/```
+  * ```wget http://mirror.nohup.it/apache//commons/pool/binaries/commons-pool2-2.5.0-bin.tar.gz```
+  * ```tar xzvf commons-pool2-2.5.0-bin.tar.gz ; cd commons-pool2-2.5.0/```
+  * ```cp commons-pool2-2.5.0.jar /opt/shibboleth-idp/edit-webapp/WEB-INF/lib/```
 
 5. Rebuild the **idp.war** of Shibboleth with the new libraries:
   * ```cd /opt/shibboleth-idp/ ; ./bin/build.sh```
@@ -313,8 +315,8 @@
 6. Create and prepare the "**shibboleth**" MySQL DB to host the values of the several **persistent-id** and **StorageRecords** to host other useful information about user consent:
   *  ```cd /usr/local/src/HOWTO-Shib-IdP```
   *  Modify the [shibboleth-db.sql](../master/shibboleth-db.sql) by changing the *username* and *password* of the user that has access to the "**shibboleth**" DB.
-  *  ```mysql -u root -p##PASSWORD-DB## < ./shibboleth-db.sql```
-  *  ```service mysql restart```
+  *  ```mysql -u root -p < ./shibboleth-db.sql```
+  *  ```systemctl restart mysql```
 
 7. Enable the generation of the ```persistent-id``` (this replace the deprecated attribute *eduPersonTargetedID*)
   * ```vim /opt/shibboleth-idp/conf/saml-nameid.properties```
